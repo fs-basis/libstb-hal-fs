@@ -463,7 +463,7 @@ again:
 		avfc->probesize = 131072;
 //		printf("%s minimal probe\n", __func__);
 	}
-
+#if 0
 	if (!player->isHttp)
 	{
 		for (unsigned int i = 0; i < avfc->nb_streams; i++) {
@@ -471,6 +471,7 @@ again:
 				find_info = false;
 		}
 	}
+#endif
 	if (find_info)
 		err = avformat_find_stream_info(avfc, NULL);
 
