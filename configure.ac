@@ -21,7 +21,7 @@ AC_SYS_LARGEFILE
 AC_PROG_LIBTOOL
 
 if test x"$BOXTYPE" = x"tripledragon"; then
-	TUXBOX_APPS_LIB_PKGCONFIG(DIRECTFB, directfb)
+	PKG_CHECK_MODULES([DIRECTFB], [directfb])
 fi
 
 AC_ARG_ENABLE(gstreamer,
