@@ -42,7 +42,6 @@ class cDemux
 		struct dmx_pes_filter_params p_flt;
 		int last_source;
 		bool _open(void);
-		void *pdata;
 	public:
 
 		bool Open(DMX_CHANNEL_TYPE pes_type, void * unused = NULL, int bufsize = 0);

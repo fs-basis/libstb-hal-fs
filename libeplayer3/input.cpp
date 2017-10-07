@@ -461,7 +461,6 @@ again:
 		avfc->max_analyze_duration2 = 1;
 #endif
 		avfc->probesize = 131072;
-//		printf("%s minimal probe\n", __func__);
 	}
 #if 0
 	if (!player->isHttp)
