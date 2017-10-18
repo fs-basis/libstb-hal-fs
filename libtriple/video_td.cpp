@@ -421,7 +421,7 @@ void cVideo::ShowPicture(const char * fname)
 		u.actime = time(NULL);
 		u.modtime = st2.st_mtime;
 		/* it does not exist or has a different date, so call ffmpeg... */
-		sprintf(cmd, "ffmpeg -y -f mjpeg -i '%s' -s 704x576 '%s' </dev/null",
+		sprintf(cmd, "ffmpeg -y -f mjpeg -i '%s' -s 704x576 '%s' > /dev/null",
 							fname, destname);
 		system(cmd); /* TODO: use libavcodec to directly convert it */
 		utime(destname, &u);
