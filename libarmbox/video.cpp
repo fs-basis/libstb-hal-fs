@@ -560,33 +560,9 @@ void cVideo::Standby(unsigned int bOn)
 
 int cVideo::getBlank(void)
 {
-	static unsigned int lastcount = 0;
-	unsigned int count = 0;
-	size_t n = 0;
-	ssize_t r;
-	char *line = NULL;
-	/* hack: the "mailbox" irq is not increasing if
-	 * no audio or video is decoded... */
-	FILE *f = fopen("/proc/interrupts", "r");
-	if (! f) /* huh? */
-		return 0;
-	while ((r = getline(&line, &n, f)) != -1)
-	{
-		if (r <= (ssize_t) strlen("mailbox")) /* should not happen... */
-			continue;
-		line[r - 1] = 0; /* remove \n */
-		if (!strcmp(&line[r - 1 - strlen("mailbox")], "mailbox"))
-		{
-			count =  atoi(line + 5);
-			break;
-		}
-	}
-	free(line);
-	fclose(f);
-	int ret = (count == lastcount); /* no new decode -> return 1 */
-	lt_debug("#%d: %s: %d (irq++: %d)\n", devnum, __func__, ret, count - lastcount);
-	lastcount = count;
-	return ret;
+	int ret = proc_get_hex(VMPEG_xres[devnum]);
+	lt_debug("%s => %d\n", __func__, !ret);
+	return !ret;
 }
 
 void cVideo::Pig(int x, int y, int w, int h, int osd_w, int osd_h, int startx, int starty, int endx, int endy)
@@ -1018,8 +994,10 @@ void cVideo::SetCECState(bool state)
 		usleep(10000);
 		message.address = 0x0f; /* broadcast */
 		message.data[0] = CEC_MSG_ACTIVE_SOURCE;
-		message.data[1] = ((((int)physicalAddress >> 12) & 0xf) << 4) + (((int)physicalAddress >> 8) & 0xf);
-		message.data[2] = ((((int)physicalAddress >> 4) & 0xf) << 4)  + (((int)physicalAddress >> 0) & 0xf);
+		//message.data[1] = ((((int)physicalAddress >> 12) & 0xf) << 4) + (((int)physicalAddress >> 8) & 0xf);
+		//message.data[2] = ((((int)physicalAddress >> 4) & 0xf) << 4)  + (((int)physicalAddress >> 0) & 0xf);
+		message.data[1] = physicalAddress[0];
+		message.data[2] = physicalAddress[1];
 		message.length = 3;
 		SendCECMessage(message);
 	}

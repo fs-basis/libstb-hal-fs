@@ -30,7 +30,6 @@
 #include <pthread.h>
 #include <syscall.h>
 
-#include "dmx_lib.h"
 #include "audio_lib.h"
 #include "video_lib.h"
 
@@ -42,13 +41,13 @@
 #define lt_debug_c(args...) _lt_debug(HAL_DEBUG_PLAYBACK, NULL, args)
 #define lt_info_c(args...) _lt_info(HAL_DEBUG_PLAYBACK, NULL, args)
 
-static const char * FILENAME = "[playback.cpp]";
+static const char * FILENAME = "[playback_gst.cpp]";
 extern cVideo * videoDecoder;
 extern cAudio * audioDecoder;
-extern cDemux * audioDemux;
-extern cDemux * videoDemux;
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
+#include <gst/mpegts/mpegts.h>
 #include <gst/pbutils/missing-plugins.h>
 
 typedef enum
@@ -72,9 +71,12 @@ GstElement * m_gst_playbin = NULL;
 GstElement * audioSink = NULL;
 GstElement * videoSink = NULL;
 gchar * uri = NULL;
-GstTagList * m_stream_tags = 0;
+GstTagList * m_stream_tags = NULL;
 static int end_eof = 0;
 #define HTTP_TIMEOUT 30
+// taken from record.h
+#define REC_MAX_APIDS 20
+int real_apids[REC_MAX_APIDS];
 
 gint match_sinktype(const GValue *velement, const gchar *type)
 {
@@ -82,7 +84,31 @@ gint match_sinktype(const GValue *velement, const gchar *type)
 	return strcmp(g_type_name(G_OBJECT_TYPE(element)), type);
 }
 
-void playbinNotifySource(GObject *object, GParamSpec *unused, gpointer user_data)
+void resetPids()
+{
+	for (unsigned int i = 0; i < REC_MAX_APIDS; i++) {
+		real_apids[i] = 0;
+	}
+}
+
+void processMpegTsSection(GstMpegtsSection* section)
+{
+	resetPids();
+	int cnt = 0;
+    if (section->section_type == GST_MPEGTS_SECTION_PMT) {
+        const GstMpegtsPMT* pmt = gst_mpegts_section_get_pmt(section);
+        for (guint i = 0; i < pmt->streams->len; ++i) {
+            const GstMpegtsPMTStream* stream = static_cast<const GstMpegtsPMTStream*>(g_ptr_array_index(pmt->streams, i));
+			if (stream->stream_type == 0x05 || stream->stream_type >= 0x80) {
+				lt_info_c( "%s:%s Audio Stream pid: %d\n", FILENAME, __FUNCTION__, stream->pid);
+				real_apids[cnt] = stream->pid;
+				cnt++;
+			}
+		}
+	}
+}
+
+void playbinNotifySource(GObject *object, GParamSpec *param_spec, gpointer user_data)
 {
 	GstElement *source = NULL;
 	cPlayback *_this = (cPlayback*)user_data;
@@ -160,7 +186,7 @@ void playbinNotifySource(GObject *object, GParamSpec *unused, gpointer user_data
 	}
 }
 
-GstBusSyncReply Gst_bus_call(GstBus * bus, GstMessage *msg, gpointer user_data)
+GstBusSyncReply Gst_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data)
 {
 	gchar * sourceName;
 
@@ -230,33 +256,52 @@ GstBusSyncReply Gst_bus_call(GstBus * bus, GstMessage *msg, gpointer user_data)
 		result = gst_tag_list_merge(m_stream_tags, tags, GST_TAG_MERGE_REPLACE);
 		if (result)
 		{
+			if (m_stream_tags && gst_tag_list_is_equal(m_stream_tags, result))
+			{
+				gst_tag_list_unref(tags);
+				gst_tag_list_unref(result);
+				break;
+			}
 			if (m_stream_tags)
-				gst_tag_list_free(m_stream_tags);
-			m_stream_tags = result;
+				gst_tag_list_unref(m_stream_tags);
+			m_stream_tags = gst_tag_list_copy(result);
+			gst_tag_list_unref(result);
 		}
 
 		const GValue *gv_image = gst_tag_list_get_value_index(tags, GST_TAG_IMAGE, 0);
 		if ( gv_image )
 		{
 			GstBuffer *buf_image;
-			buf_image = gst_value_get_buffer (gv_image);
+			GstSample *sample;
+			sample = (GstSample *)g_value_get_boxed(gv_image);
+			buf_image = gst_sample_get_buffer(sample);
 			int fd = open("/tmp/.id3coverart", O_CREAT|O_WRONLY|O_TRUNC, 0644);
-			if(fd >= 0)
+			if (fd >= 0)
 			{
-				GstMapInfo Info;
-				gst_buffer_map(buf_image, &Info,(GstMapFlags)( GST_MAP_READ));
-				int ret = write(fd, Info.data, Info.size);
+				guint8 *data;
+				gsize size;
+				GstMapInfo map;
+				gst_buffer_map(buf_image, &map, GST_MAP_READ);
+				data = map.data;
+				size = map.size;
+				int ret = write(fd, data, size);
+				gst_buffer_unmap(buf_image, &map);
 				close(fd);
-				gst_buffer_unmap(buf_image, &Info);
-				lt_info_c( "%s:%s - GST_MESSAGE_INFO: cPlayback::state /tmp/.id3coverart %d bytes written\n", FILENAME, __FUNCTION__, ret);
+				lt_info_c("%s:%s - /tmp/.id3coverart %d bytes written\n", FILENAME, __FUNCTION__, ret);
 			}
-			//FIXME: how shall playback handle this event???
 		}
-		gst_tag_list_free(tags);
+		gst_tag_list_unref(tags);
 		lt_debug_c( "%s:%s - GST_MESSAGE_INFO: update info tags\n", FILENAME, __FUNCTION__);  //FIXME: how shall playback handle this event???
 		break;
 	}
-
+    case GST_MESSAGE_ELEMENT:
+	{
+		GstMpegtsSection* section = gst_message_parse_mpegts_section(msg);
+		if (section) {
+			processMpegTsSection(section);
+			gst_mpegts_section_unref(section);
+		}
+	}
 	case GST_MESSAGE_STATE_CHANGED:
 	{
 		if(GST_MESSAGE_SRC(msg) != GST_OBJECT(m_gst_playbin))
@@ -384,7 +429,7 @@ cPlayback::~cPlayback()
 	lt_info( "%s:%s\n", FILENAME, __FUNCTION__);
 	//FIXME: all deleting stuff is done in Close()
 	if (m_stream_tags)
-		gst_tag_list_free(m_stream_tags);
+		gst_tag_list_unref(m_stream_tags);
 }
 
 //Used by Fileplay
@@ -470,8 +515,15 @@ bool cPlayback::Start(char *filename, int /*vpid*/, int /*vtype*/, int /*apid*/,
 	else
 		extra_headers.clear();
 
+	resetPids();
+
 	mAudioStream = 0;
 	init_jump = -1;
+
+	gst_tag_list_unref(m_stream_tags);
+	m_stream_tags = NULL;
+
+	unlink("/tmp/.id3coverart");
 
 	//create playback path
 	bool isHTTP = false;
@@ -617,13 +669,19 @@ bool cPlayback::SetAPid(int pid, bool /*ac3*/)
 {
 	lt_info("%s: pid %i\n", __func__, pid);
 
-	int current_audio;
+	int to_audio = pid;
 
-	if(pid != mAudioStream)
+	for (unsigned int i = 0; i < REC_MAX_APIDS; i++) {
+		if (real_apids[i])
+			if (real_apids[i] == pid)
+				to_audio = i;
+	}
+
+	if(to_audio != mAudioStream)
 	{
-		g_object_set (G_OBJECT (m_gst_playbin), "current-audio", pid, NULL);
-		printf("%s: switched to audio stream %i\n", __FUNCTION__, pid);
-		mAudioStream = pid;
+		g_object_set (G_OBJECT (m_gst_playbin), "current-audio", to_audio, NULL);
+		printf("%s: switched to audio stream %i\n", __FUNCTION__, to_audio);
+		mAudioStream = to_audio;
 	}
 
 	return true;
@@ -751,10 +809,13 @@ bool cPlayback::GetPosition(int &position, int &duration)
 		if (audioSink || videoSink)
 		{
 			g_signal_emit_by_name(audioSink ? audioSink : videoSink, "get-decoder-time", &pts);
-			if (!GST_CLOCK_TIME_IS_VALID(pts)){
+			if (!GST_CLOCK_TIME_IS_VALID(pts))
+			{
 				lt_info( "%s - %d failed\n", __FUNCTION__, __LINE__);
 			}
-		}else{
+		}
+		else
+		{
 			if(!gst_element_query_position(m_gst_playbin, fmt, &pts))
 				lt_info( "%s - %d failed\n", __FUNCTION__, __LINE__);
 		}
@@ -819,56 +880,45 @@ void cPlayback::FindAllPids(int *apids, unsigned int *ac3flags, unsigned int *nu
 	if(m_gst_playbin)
 	{
 		gint i, n_audio = 0;
-		//GstStructure * structure = NULL;
 
 		// get audio
 		g_object_get (m_gst_playbin, "n-audio", &n_audio, NULL);
-		printf("%s: %d audio\n", __FUNCTION__, n_audio);
+		lt_info("%s: %d audio\n", __FUNCTION__, n_audio);
 
 		if(n_audio == 0)
 			return;
 
+		language->clear();
+
 		for (i = 0; i < n_audio; i++)
 		{
 			// apids
-			apids[i]=i;
+			apids[i]= real_apids[i] ? real_apids[i] : i;
 
 			GstPad * pad = 0;
 			g_signal_emit_by_name (m_gst_playbin, "get-audio-pad", i, &pad);
+
 			GstCaps * caps = gst_pad_get_current_caps(pad);
+			gst_object_unref(pad);
+
 			if (!caps)
 				continue;
 
 			GstStructure * structure = gst_caps_get_structure(caps, 0);
-			//const gchar *g_type = gst_structure_get_name(structure);
-
-			//if (!structure)
-			//return atUnknown;
-			//ac3flags[0] = 0;
+			GstTagList * tags = NULL;
+			gchar * g_lang = NULL;
 
 			// ac3flags
 			if ( gst_structure_has_name (structure, "audio/mpeg"))
 			{
-				gint mpegversion, layer = -1;
+				gint mpegversion;
 
 				if (!gst_structure_get_int (structure, "mpegversion", &mpegversion))
-					//return atUnknown;
 					ac3flags[i] = 0;
 
 				switch (mpegversion)
 				{
 				case 1:
-					/*
-					{
-						gst_structure_get_int (structure, "layer", &layer);
-						if ( layer == 3 )
-							return atMP3;
-						else
-							return atMPEG;
-							ac3flags[0] = 4;
-						break;
-					}
-					*/
 					ac3flags[i] = 4;
 				case 2:
 					//return atAAC;
@@ -892,9 +942,29 @@ void cPlayback::FindAllPids(int *apids, unsigned int *ac3flags, unsigned int *nu
 				ac3flags[i] = 0;
 
 			gst_caps_unref(caps);
-		}
 
-		// numpids
+			//(ac3flags[i] > 2) ?	ac3flags[i] = 1 : ac3flags[i] = 0;
+
+			g_signal_emit_by_name (m_gst_playbin, "get-audio-tags", i, &tags);
+			if (tags && GST_IS_TAG_LIST(tags))
+			{
+				if (gst_tag_list_get_string(tags, GST_TAG_LANGUAGE_CODE, &g_lang))
+				{
+					std::string slang;
+					if (gst_tag_check_language_code(g_lang))
+						slang = gst_tag_get_language_name(g_lang);
+					else
+						slang = g_lang;
+					if (slang.empty())
+						language[i] = "unk";
+					else
+						language[i] = slang.c_str();
+					lt_info("%s: language:%s\n", __FUNCTION__, language[i].c_str());
+					g_free(g_lang);
+				}
+				gst_tag_list_free(tags);
+			}
+		}
 		*numpida=i;
 	}
 }
@@ -941,6 +1011,62 @@ void cPlayback::GetMetadata(std::vector<std::string> &keys, std::vector<std::str
 {
 	keys.clear();
 	values.clear();
+	if (gst_tag_list_is_empty (m_stream_tags))
+		return;
+
+	for (guint i = 0, icnt = gst_tag_list_n_tags(m_stream_tags); i < icnt; i++)
+	{
+		const gchar *name = gst_tag_list_nth_tag_name(m_stream_tags, i);
+		if (!name)
+		{
+			continue;
+		}
+
+		for (guint j = 0, jcnt = gst_tag_list_get_tag_size(m_stream_tags, name); j < jcnt; j++)
+		{
+			const GValue *val;
+
+			val = gst_tag_list_get_value_index(m_stream_tags, name, j);
+
+			if (G_VALUE_HOLDS_STRING(val))
+			{
+				keys.push_back(name);
+				values.push_back(g_value_get_string(val));
+			}
+			else if (G_VALUE_HOLDS_UINT(val))
+			{
+				char buffer [50];
+				keys.push_back(name);
+				sprintf (buffer, "%u", g_value_get_uint(val));
+				values.push_back(buffer);
+			}
+			else if (G_VALUE_HOLDS_DOUBLE(val))
+			{
+				char buffer [50];
+				keys.push_back(name);
+				sprintf (buffer, "%f", g_value_get_double(val));
+				values.push_back(buffer);
+			}
+			else if (G_VALUE_HOLDS_BOOLEAN(val))
+			{
+				keys.push_back(name);
+				values.push_back(g_value_get_boolean(val) ? "true" : "false");
+			}
+			else if (GST_VALUE_HOLDS_DATE_TIME(val))
+			{
+				GstDateTime *dt = (GstDateTime *) g_value_get_boxed(val);
+				keys.push_back(name);
+				values.push_back(gst_date_time_to_iso8601_string(dt));
+			}
+			else if (G_VALUE_HOLDS(val, G_TYPE_DATE))
+			{
+				keys.push_back(name);
+				values.push_back(gst_value_serialize(val));
+			}
+
+		}
+	}
+	printf("%s:%s %d tags found\n", FILENAME, __func__, (int)keys.size());
 }
 
 void cPlayback::FindAllTeletextsubtitlePids(int *, unsigned int *numpids, std::string *, int *, int *)
@@ -974,13 +1100,18 @@ uint64_t cPlayback::GetReadCount()
 
 int cPlayback::GetAPid(void)
 {
-	lt_info("%s\n", __func__);
-	return mAudioStream;
+	gint current_audio = 0;
+	g_object_get (m_gst_playbin, "current-audio", &current_audio, NULL);
+	lt_info("%s: %d audio\n", __FUNCTION__, current_audio);
+	return real_apids[current_audio] ? real_apids[current_audio] : current_audio;
 }
 
 int cPlayback::GetVPid(void)
 {
-	return 0;
+	gint current_video = 0;
+	g_object_get (m_gst_playbin, "current-video", &current_video, NULL);
+	lt_info("%s: %d video\n", __FUNCTION__, current_video);
+	return current_video;
 }
 
 int cPlayback::GetSubtitlePid(void)
