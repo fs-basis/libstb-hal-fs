@@ -290,7 +290,8 @@ GstBusSyncReply Gst_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data)
 				lt_info_c("%s:%s - /tmp/.id3coverart %d bytes written\n", FILENAME, __FUNCTION__, ret);
 			}
 		}
-		gst_tag_list_unref(tags);
+		if (tags)
+			gst_tag_list_unref(tags);
 		lt_debug_c( "%s:%s - GST_MESSAGE_INFO: update info tags\n", FILENAME, __FUNCTION__);  //FIXME: how shall playback handle this event???
 		break;
 	}
@@ -324,7 +325,7 @@ GstBusSyncReply Gst_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data)
 		case GST_STATE_CHANGE_READY_TO_PAUSED:
 		{
 			GstIterator *children;
-			GValue r = { 0, };
+			GValue r = G_VALUE_INIT;
 
 			if (audioSink)
 			{
@@ -338,8 +339,7 @@ GstBusSyncReply Gst_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data)
 				videoSink = NULL;
 			}
 			children = gst_bin_iterate_recurse(GST_BIN(m_gst_playbin));
-
-			if (gst_iterator_find_custom(children, (GCompareFunc)match_sinktype, &r, (gpointer)"GstDVBAudioSink"))
+			if (children && gst_iterator_find_custom(children, (GCompareFunc)match_sinktype, &r, (gpointer)"GstDVBAudioSink"))
 			{
 				audioSink = GST_ELEMENT_CAST(g_value_dup_object (&r));
 				g_value_unset (&r);
@@ -348,8 +348,7 @@ GstBusSyncReply Gst_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data)
 
 			gst_iterator_free(children);
 			children = gst_bin_iterate_recurse(GST_BIN(m_gst_playbin));
-
-			if (gst_iterator_find_custom(children, (GCompareFunc)match_sinktype, &r, (gpointer)"GstDVBVideoSink"))
+			if (children && gst_iterator_find_custom(children, (GCompareFunc)match_sinktype, &r, (gpointer)"GstDVBVideoSink"))
 			{
 				videoSink = GST_ELEMENT_CAST(g_value_dup_object (&r));
 				g_value_unset (&r);
@@ -389,6 +388,8 @@ GstBusSyncReply Gst_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data)
 	default:
 		break;
 	}
+	if(sourceName)
+		g_free(sourceName);
 
 	return GST_BUS_DROP;
 }
@@ -461,7 +462,8 @@ void cPlayback::Close(void)
 		// disconnect sync handler callback
 		GstBus * bus = gst_pipeline_get_bus(GST_PIPELINE (m_gst_playbin));
 		gst_bus_set_sync_handler(bus, NULL, NULL, NULL);
-		gst_object_unref(bus);
+		if (bus)
+			gst_object_unref(bus);
 		lt_info( "%s:%s - GST bus handler closed\n", FILENAME, __FUNCTION__);
 	}
 
@@ -520,7 +522,8 @@ bool cPlayback::Start(char *filename, int /*vpid*/, int /*vtype*/, int /*apid*/,
 	mAudioStream = 0;
 	init_jump = -1;
 
-	gst_tag_list_unref(m_stream_tags);
+	if (m_stream_tags)
+		gst_tag_list_unref(m_stream_tags);
 	m_stream_tags = NULL;
 
 	unlink("/tmp/.id3coverart");
@@ -564,8 +567,7 @@ bool cPlayback::Start(char *filename, int /*vpid*/, int /*vtype*/, int /*apid*/,
 
 	lt_info("%s:%s - filename=%s\n", FILENAME, __FUNCTION__, filename);
 
-	guint flags =	GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | \
-	                GST_PLAY_FLAG_TEXT | GST_PLAY_FLAG_NATIVE_VIDEO;
+	guint flags =	GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_NATIVE_VIDEO;
 
 	/* increase the default 2 second / 2 MB buffer limitations to 5s / 5MB */
 	int m_buffer_size = 5*1024*1024;
@@ -594,7 +596,8 @@ bool cPlayback::Start(char *filename, int /*vpid*/, int /*vtype*/, int /*apid*/,
 		//gstbus handler
 		GstBus * bus = gst_pipeline_get_bus( GST_PIPELINE(m_gst_playbin) );
 		gst_bus_set_sync_handler(bus, Gst_bus_call, NULL, NULL);
-		gst_object_unref(bus);
+		if (bus)
+			gst_object_unref(bus);
 
 		first = true;
 
@@ -899,7 +902,8 @@ void cPlayback::FindAllPids(int *apids, unsigned int *ac3flags, unsigned int *nu
 			g_signal_emit_by_name (m_gst_playbin, "get-audio-pad", i, &pad);
 
 			GstCaps * caps = gst_pad_get_current_caps(pad);
-			gst_object_unref(pad);
+			if (pad)
+				gst_object_unref(pad);
 
 			if (!caps)
 				continue;
@@ -941,14 +945,15 @@ void cPlayback::FindAllPids(int *apids, unsigned int *ac3flags, unsigned int *nu
 				//return atPCM;
 				ac3flags[i] = 0;
 
-			gst_caps_unref(caps);
+			if (caps)
+				gst_caps_unref(caps);
 
 			//(ac3flags[i] > 2) ?	ac3flags[i] = 1 : ac3flags[i] = 0;
 
 			g_signal_emit_by_name (m_gst_playbin, "get-audio-tags", i, &tags);
-			if (tags && GST_IS_TAG_LIST(tags))
+			if (tags)
 			{
-				if (gst_tag_list_get_string(tags, GST_TAG_LANGUAGE_CODE, &g_lang))
+				if (GST_IS_TAG_LIST(tags) && gst_tag_list_get_string(tags, GST_TAG_LANGUAGE_CODE, &g_lang))
 				{
 					std::string slang;
 					if (gst_tag_check_language_code(g_lang))
@@ -1011,22 +1016,33 @@ void cPlayback::GetMetadata(std::vector<std::string> &keys, std::vector<std::str
 {
 	keys.clear();
 	values.clear();
-	if (gst_tag_list_is_empty (m_stream_tags))
+
+	GstTagList *meta_list = NULL;
+	if(m_stream_tags)
+		meta_list = gst_tag_list_copy(m_stream_tags);
+
+	if (meta_list == NULL)
 		return;
 
-	for (guint i = 0, icnt = gst_tag_list_n_tags(m_stream_tags); i < icnt; i++)
+	if (gst_tag_list_is_empty(meta_list))
+		return;
+
+	for (guint i = 0, icnt = gst_tag_list_n_tags(meta_list); i < icnt; i++)
 	{
-		const gchar *name = gst_tag_list_nth_tag_name(m_stream_tags, i);
+		const gchar *name = gst_tag_list_nth_tag_name(meta_list, i);
 		if (!name)
 		{
 			continue;
 		}
 
-		for (guint j = 0, jcnt = gst_tag_list_get_tag_size(m_stream_tags, name); j < jcnt; j++)
+		for (guint j = 0, jcnt = gst_tag_list_get_tag_size(meta_list, name); j < jcnt; j++)
 		{
 			const GValue *val;
 
-			val = gst_tag_list_get_value_index(m_stream_tags, name, j);
+			val = gst_tag_list_get_value_index(meta_list, name, j);
+
+			if (val == NULL)
+				continue;
 
 			if (G_VALUE_HOLDS_STRING(val))
 			{
@@ -1066,6 +1082,7 @@ void cPlayback::GetMetadata(std::vector<std::string> &keys, std::vector<std::str
 
 		}
 	}
+	gst_tag_list_unref(meta_list);
 	printf("%s:%s %d tags found\n", FILENAME, __func__, (int)keys.size());
 }
 
