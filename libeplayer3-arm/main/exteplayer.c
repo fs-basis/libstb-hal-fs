@@ -84,9 +84,14 @@ static void TerminateAllSockets(void)
 	}
 }
 
-static int g_pfd[2] = {-1, -1}; /* Used to wake terminate thread */
+static int g_pfd[2] = {-1, -1}; /* Used to wake terminate thread and kbhit */
 static int isPlaybackStarted = 0;
 static pthread_mutex_t playbackStartMtx;
+
+static void TerminateWakeUp()
+{
+	write(g_pfd[1], "x", 1);
+}
 
 static void *TermThreadFun(void *arg __attribute__((unused)))
 {
@@ -126,13 +131,6 @@ static void *TermThreadFun(void *arg __attribute__((unused)))
 	}
 	if (FD_ISSET(fd, &readfds))
 	{
-		/*
-		if ((cl = accept(fd, NULL, NULL)) == -1)
-		{
-		    perror("TermThreadFun accept error");
-		    goto finish;
-		}
-		*/
 		pthread_mutex_lock(&playbackStartMtx);
 		PlaybackDieNow(1);
 		if (isPlaybackStarted)
@@ -171,16 +169,17 @@ static void map_inter_file_path(char *filename)
 static int kbhit(void)
 {
 	struct timeval tv;
-	fd_set read_fd;
+	fd_set readfds;
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
-	FD_ZERO(&read_fd);
-	FD_SET(0, &read_fd);
-	if (-1 == select(1, &read_fd, NULL, NULL, &tv))
+	FD_ZERO(&readfds);
+	FD_SET(0,&readfds);
+	FD_SET(g_pfd[0], &readfds);
+	if(-1 == select(g_pfd[0] + 1, &readfds, NULL, NULL, &tv))
 	{
 		return 0;
 	}
-	if (FD_ISSET(0, &read_fd))
+	if (FD_ISSET(0, &readfds))
 	{
 		return 1;
 	}
@@ -480,14 +479,14 @@ static void UpdateVideoTrack()
 	HandleTracks(g_player->manager->video, (PlaybackCmd_t) - 1, "vc");
 }
 
-static int ParseParams(int argc, char *argv[], char *file, char *audioFile, int *pAudioTrackIdx, int *subtitleTrackIdx)
+static int ParseParams(int argc, char *argv[], char *file, char *audioFile, int *pAudioTrackIdx, int *subtitleTrackIdx, uint32_t *linuxDvbBufferSizeMB)
 {
 	int ret = 0;
 	int c;
 	//int digit_optind = 0;
 	//int aopt = 0, bopt = 0;
 	//char *copt = 0, *dopt = 0;
-	while ((c = getopt(argc, argv, "we3dlsrimva:n:x:u:c:h:o:p:P:t:9:0:1:4:f:")) != -1)
+	while ((c = getopt(argc, argv, "we3dlsrimva:n:x:u:c:h:o:p:P:t:9:0:1:4:f:b:")) != -1) 
 	{
 		switch (c)
 		{
@@ -597,6 +596,9 @@ static int ParseParams(int argc, char *argv[], char *file, char *audioFile, int 
 				free(ffopt);
 				break;
 			}
+			case 'b':
+				*linuxDvbBufferSizeMB = 1024 * 1024 * atoi(optarg);
+				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", c);
 				ret = -1;
@@ -631,14 +633,16 @@ int main(int argc, char *argv[])
 	memset(audioFile, '\0', sizeof(audioFile));
 	int audioTrackIdx = -1;
 	int subtitleTrackIdx = -1;
+	uint32_t linuxDvbBufferSizeMB = 0; 
 	char argvBuff[256];
 	memset(argvBuff, '\0', sizeof(argvBuff));
 	int commandRetVal = -1;
 	/* inform client that we can handle additional commands */
-	fprintf(stderr, "{\"EPLAYER3_EXTENDED\":{\"version\":%d}}\n", 39);
-	if (0 != ParseParams(argc, argv, file, audioFile, &audioTrackIdx, &subtitleTrackIdx))
+	fprintf(stderr, "{\"EPLAYER3_EXTENDED\":{\"version\":%d}}\n", 45);
+	if (0 != ParseParams(argc, argv, file, audioFile, &audioTrackIdx, &subtitleTrackIdx, &linuxDvbBufferSizeMB))
 	{
 		printf("Usage: exteplayer3 filePath [-u user-agent] [-c cookies] [-h headers] [-p prio] [-a] [-d] [-w] [-l] [-s] [-i] [-t audioTrackId] [-9 subtitleTrackId] [-x separateAudioUri] plabackUri\n");
+		printf("[-b size] Linux DVB output buffer size in MB\n");
 		printf("[-a 0|1|2|3] AAC software decoding - 1 bit - AAC ADTS, 2 - bit AAC LATM\n");
 		printf("[-e] EAC3 software decoding\n");
 		printf("[-3] AC3 software decoding\n");
@@ -707,6 +711,9 @@ int main(int argc, char *argv[])
 	g_player->output->Command(g_player, OUTPUT_ADD, "audio");
 	g_player->output->Command(g_player, OUTPUT_ADD, "video");
 	g_player->output->Command(g_player, OUTPUT_ADD, "subtitle");
+	//Set LINUX DVB additional write buffer size 
+	if (linuxDvbBufferSizeMB)
+		g_player->output->Command(g_player, OUTPUT_SET_BUFFER_SIZE, &linuxDvbBufferSizeMB);
 	g_player->manager->video->Command(g_player, MANAGER_REGISTER_UPDATED_TRACK_INFO, UpdateVideoTrack);
 	if (strncmp(file, "rtmp", 4) && strncmp(file, "ffrtmp", 4))
 	{
@@ -737,6 +744,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "{\"PLAYBACK_PLAY\":{\"sts\":%d}}\n", commandRetVal);
 		if (g_player->playback->isPlaying)
 		{
+			PlaybackDieNowRegisterCallback(TerminateWakeUp);
 			HandleTracks(g_player->manager->video, (PlaybackCmd_t) - 1, "vc");
 			HandleTracks(g_player->manager->audio, (PlaybackCmd_t) - 1, "al");
 			if (audioTrackIdx >= 0)
@@ -755,7 +763,7 @@ int main(int argc, char *argv[])
 			}
 			HandleTracks(g_player->manager->subtitle, (PlaybackCmd_t) - 1, "sc");
 		}
-		while (g_player->playback->isPlaying)
+		while (g_player->playback->isPlaying && 0 == PlaybackDieNow(0))
 		{
 			/* we made fgets non blocking */
 			if (NULL == fgets(argvBuff, sizeof(argvBuff) - 1, stdin))
@@ -922,7 +930,21 @@ int main(int argc, char *argv[])
 					commandRetVal = g_player->playback->Command(g_player, PLAYBACK_PTS, &pts);
 					if (0 == commandRetVal)
 					{
-						fprintf(stderr, "{\"J\":{\"ms\":%lld}}\n", pts / 90);
+						int64_t lastPts = 0;
+						commandRetVal = 1;
+						if (g_player->container && g_player->container->selectedContainer)
+						{
+							commandRetVal = g_player->container->selectedContainer->Command((Context_t*)g_player->container, CONTAINER_LAST_PTS, &lastPts);
+						}
+
+						if (0 == commandRetVal && lastPts != INVALID_PTS_VALUE)
+						{
+							fprintf(stderr, "{\"J\":{\"ms\":%lld,\"lms\":%lld}}\n", pts / 90, lastPts / 90);
+						}
+						else
+						{
+							fprintf(stderr, "{\"J\":{\"ms\":%lld}}\n", pts / 90);
+						}
 					}
 					break;
 				}
@@ -972,6 +994,5 @@ int main(int argc, char *argv[])
 	pthread_mutex_destroy(&playbackStartMtx);
 	close(g_pfd[0]);
 	close(g_pfd[1]);
-	//printOutputCapabilities();
 	exit(0);
 }
