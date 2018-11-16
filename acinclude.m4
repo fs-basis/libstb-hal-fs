@@ -215,10 +215,6 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="armbox"
 			BOXMODEL="$withval"
 		;;
-		hd60)
-			BOXTYPE="armbox"
-			BOXMODEL="$withval"
-		;;
 		*)
 			AC_MSG_ERROR([bad value $withval for --with-boxtype])
 		;;
@@ -246,13 +242,6 @@ AS_HELP_STRING([], [valid for armbox: hd51, hd60, vusolo4k]),
 			fi
 		;;
 		hd51|hd60|vusolo4k)
-			if test "$BOXTYPE" = "armbox"; then
-				BOXMODEL="$withval"
-			else
-				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
-			fi
-		;;
-		hd60)
 			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
