@@ -211,11 +211,7 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
 		;;
-		vusolo4k)
-			BOXTYPE="armbox"
-			BOXMODEL="$withval"
-		;;
-		hd51)
+		hd51|hd60|vusolo4k)
 			BOXTYPE="armbox"
 			BOXMODEL="$withval"
 		;;
@@ -249,14 +245,7 @@ AS_HELP_STRING([], [valid for armbox: hd51, hd60, vusolo4k]),
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		vusolo4k)
-			if test "$BOXTYPE" = "armbox"; then
-				BOXMODEL="$withval"
-			else
-				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
-			fi
-		;;
-		hd51)
+		hd51|hd60|vusolo4k)
 			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
