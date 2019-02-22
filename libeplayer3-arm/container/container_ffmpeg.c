@@ -1533,7 +1533,9 @@ int32_t container_ffmpeg_init_av_context(Context_t *context, char *filename, uin
 	    0 == strncmp(filename, "file://", 7))
 	{
 		AVIOContext *avio_ctx = NULL;
-		custom_io_tab[AVIdx] = malloc(sizeof(CustomIOCtx_t));
+		if(custom_io_tab[AVIdx] == NULL)//workaround for double malloc if container_ffmpeg_stop is not called after file play to end
+			custom_io_tab[AVIdx] = malloc(sizeof(CustomIOCtx_t));
+
 		memset(custom_io_tab[AVIdx], 0x00, sizeof(CustomIOCtx_t));
 
 		custom_io_tab[AVIdx]->szFile = filename;
@@ -2506,6 +2508,10 @@ int32_t container_ffmpeg_update_tracks(Context_t *context, char *filename, int32
 							ffmpeg_printf(1, "cAVIdx[%d]: MANAGER_ADD track AUDIO\n", cAVIdx);
 							if (context->manager->audio->Command(context, MANAGER_ADD, &track) < 0)
 							{
+								if(track.aacbuf){
+									free(track.aacbuf);
+									track.aacbuf = NULL;
+								}
 								/* konfetti: fixme: is this a reason to return with error? */
 								ffmpeg_err("failed to add track %d\n", n);
 							}
@@ -2727,7 +2733,11 @@ static int32_t container_ffmpeg_stop(Context_t *context)
 					fclose(io->pFile);
 				if (io->pMoovFile)
 					fclose(io->pMoovFile);
-				free(custom_io_tab[i]);
+				if(custom_io_tab[i] != NULL)
+				{
+					free(custom_io_tab[i]);
+					custom_io_tab[i] = NULL;
+				}
 				av_freep(&(avContextTab[i]->pb->buffer));
 				av_freep(&(avContextTab[i]->pb));
 				use_custom_io[i] = 0;
