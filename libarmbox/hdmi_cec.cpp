@@ -43,8 +43,6 @@
 #define GREEN "\x1B[32m"
 #define NORMAL "\x1B[0m"
 
-#define WAITTIME 20
-
 #define hal_debug(args...) _hal_debug(HAL_DEBUG_INIT, this, args)
 #define hal_info(args...) _hal_info(HAL_DEBUG_INIT, this, args)
 #define hal_debug_c(args...) _hal_debug(HAL_DEBUG_INIT, NULL, args)
@@ -121,6 +119,7 @@ bool hdmi_cec::SetCECMode(VIDEO_HDMI_CEC_MODE _deviceType)
 
 	hal_info(GREEN"[CEC] switch on %s\n"NORMAL, __func__);
 
+#if BOXMODEL_VUPLUS_ALL
 	if (hdmiFd == -1)
 	{
 		hdmiFd = ::open(CEC_HDMIDEV, O_RDWR | O_NONBLOCK | O_CLOEXEC);
@@ -129,6 +128,7 @@ bool hdmi_cec::SetCECMode(VIDEO_HDMI_CEC_MODE _deviceType)
 			::ioctl(hdmiFd, 0); /* flush old messages */
 		}
 	}
+#endif
 
 	if (hdmiFd == -1)
 	{
@@ -137,7 +137,9 @@ bool hdmi_cec::SetCECMode(VIDEO_HDMI_CEC_MODE _deviceType)
 		if (hdmiFd >= 0)
 		{
 			fallback = true;
+#if BOXMODEL_VUPLUS_ALL
 			hal_info(RED"[CEC] fallback on %s\n"NORMAL, __func__);
+#endif
 
 			__u32 monitor = CEC_MODE_INITIATOR | CEC_MODE_FOLLOWER;
 			struct cec_caps caps = {};
@@ -300,7 +302,7 @@ void hdmi_cec::ReportPhysicalAddress()
 	SendCECMessage(txmessage);
 }
 
-void hdmi_cec::SendCECMessage(struct cec_message &txmessage)
+void hdmi_cec::SendCECMessage(struct cec_message &txmessage, int sleeptime)
 {
 	if (hdmiFd >= 0)
 	{
@@ -329,7 +331,7 @@ void hdmi_cec::SendCECMessage(struct cec_message &txmessage)
 			::write(hdmiFd, &message, 2 + message.length);
 		}
 
-		usleep(WAITTIME*10000);
+		usleep(sleeptime * 10000);
 	}
 }
 
@@ -378,10 +380,13 @@ void hdmi_cec::SetCECState(bool state)
 		message.length = 1;
 		SendCECMessage(message);
 
+#if BOXMODEL_VUPLUS_ALL
 		int cnt = 0;
 
 		while (tv_off && (cnt < 5))
 		{
+#endif
+
 			message.initiator = logicalAddress;
 			message.destination = CEC_OP_PRIM_DEVTYPE_TV;
 			message.data[0] = CEC_MSG_IMAGE_VIEW_ON;
@@ -394,8 +399,10 @@ void hdmi_cec::SetCECState(bool state)
 			message.length = 1;
 			SendCECMessage(message);
 
+#if BOXMODEL_VUPLUS_ALL
 			cnt++;
 		}
+#endif
 
 		message.initiator = logicalAddress;
 		message.destination = CEC_LOG_ADDR_BROADCAST;
@@ -645,7 +652,7 @@ void hdmi_cec::Receive(int what)
 
 			switch (rxmessage.opcode)
 			{
-			case CEC_OPCODE_ACTIVE_SOURCE:
+			//case CEC_OPCODE_ACTIVE_SOURCE:
 			case CEC_OPCODE_REQUEST_ACTIVE_SOURCE:
 			{
 				txmessage.destination = CEC_LOG_ADDR_BROADCAST; //rxmessage.initiator;
@@ -783,13 +790,13 @@ void hdmi_cec::send_key(unsigned char key, unsigned char destination)
 	txmessage.data[0] = CEC_OPCODE_USER_CONTROL_PRESSED;
 	txmessage.data[1] = key;
 	txmessage.length = 2;
-	SendCECMessage(txmessage);
+	SendCECMessage(txmessage, 1);
 
 	txmessage.destination = destination;
 	txmessage.initiator = logicalAddress;
 	txmessage.data[0] = CEC_OPCODE_USER_CONTROL_RELEASE;
 	txmessage.length = 1;
-	SendCECMessage(txmessage);
+	SendCECMessage(txmessage, 0);
 }
 
 void hdmi_cec::request_audio_status()
@@ -799,7 +806,7 @@ void hdmi_cec::request_audio_status()
 	txmessage.initiator = logicalAddress;
 	txmessage.data[0] = CEC_OPCODE_GIVE_AUDIO_STATUS;
 	txmessage.length = 1;
-	SendCECMessage(txmessage);
+	SendCECMessage(txmessage, 0);
 }
 
 void hdmi_cec::vol_up()
