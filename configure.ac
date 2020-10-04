@@ -51,10 +51,6 @@ else
 	AC_DEFINE(USE_OPENGL,1,[use opengl instead of clutter])
 fi
 
-if test x"$BOXTYPE" = x"tripledragon"; then
-	PKG_CHECK_MODULES([DIRECTFB], [directfb])
-fi
-
 AC_ARG_ENABLE(gstreamer_01,
 	AS_HELP_STRING(--enable-gstreamer_01, use gstreamer 0.10 playback),
 	,[enable_gstreamer_01=no])
@@ -117,6 +113,5 @@ libeplayer3-sh4/Makefile
 libgeneric-pc/Makefile
 libraspi/Makefile
 libspark/Makefile
-libtriple/Makefile
 tools/Makefile
 ])
