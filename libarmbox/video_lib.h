@@ -195,7 +195,6 @@ class cVideo
 
 		/* used internally by dmx */
 		int64_t GetPTS(void);
-
 	public:
 		/* constructor & destructor */
 		cVideo(int mode, void *, void *, unsigned int unit = 0);

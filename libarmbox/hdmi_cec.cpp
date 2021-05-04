@@ -126,15 +126,6 @@ bool hdmi_cec::SetCECMode(VIDEO_HDMI_CEC_MODE _deviceType)
 
 	if (hdmiFd == -1)
 	{
-		hdmiFd = ::open(CEC_HDMIDEV, O_RDWR | O_NONBLOCK | O_CLOEXEC);
-		if (hdmiFd >= 0)
-		{
-			::ioctl(hdmiFd, 0); /* flush old messages */
-		}
-	}
-
-	if (hdmiFd == -1)
-	{
 		hdmiFd = open(CEC_FALLBACK_DEVICE, O_RDWR | O_CLOEXEC);
 
 		if (hdmiFd >= 0)
@@ -379,10 +370,6 @@ void hdmi_cec::SetCECState(bool state)
 		message.length = 1;
 		SendCECMessage(message);
 
-		int cnt = 0;
-
-		while (tv_off && (cnt < 5))
-		{
 			message.initiator = logicalAddress;
 			message.destination = CEC_OP_PRIM_DEVTYPE_TV;
 			message.data[0] = CEC_MSG_IMAGE_VIEW_ON;
@@ -394,9 +381,6 @@ void hdmi_cec::SetCECState(bool state)
 			message.data[0] = CEC_MSG_GIVE_DEVICE_POWER_STATUS;
 			message.length = 1;
 			SendCECMessage(message);
-
-			cnt++;
-		}
 
 		GetCECAddressInfo();
 

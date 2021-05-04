@@ -128,7 +128,6 @@ typedef enum
 	VIDEO_CONTROL_MAX = VIDEO_CONTROL_SHARPNESS
 } VIDEO_CONTROL;
 
-
 class cVideo
 {
 	friend class cPlayback;
@@ -157,6 +156,7 @@ class cVideo
 
 		int brightness, contrast, saturation, hue;
 
+		/* used internally by playback */
 		void openDevice(void);
 		void closeDevice(void);
 	public:

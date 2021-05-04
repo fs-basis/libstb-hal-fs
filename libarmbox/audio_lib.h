@@ -39,7 +39,6 @@ class cAudio
 
 		int do_mute(bool enable, bool remember);
 		void setBypassMode(bool disable);
-
 	public:
 		/* construct & destruct */
 		cAudio(void *, void *, void *);
