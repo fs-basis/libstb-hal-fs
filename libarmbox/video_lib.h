@@ -191,7 +191,6 @@ class cVideo
 		int dynamic_contrast;
 		int scaler_sharpness;
 		int zapping_mode;
-		int blank_mode;
 
 		/* used internally by dmx */
 		int64_t GetPTS(void);
