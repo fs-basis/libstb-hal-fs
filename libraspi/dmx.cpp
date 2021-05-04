@@ -116,16 +116,6 @@ bool cDemux::Open(DMX_CHANNEL_TYPE pes_type, void * /*hVideoBuffer*/, int uBuffe
 		uBufferSize = 0x100000;		/* 1MB */
 	if (dmx_type == DMX_AUDIO_CHANNEL)
 		uBufferSize = 0x10000;		/* 64k */
-#if 0
-	if (!pesfds.empty())
-	{
-		hal_info("%s ERROR! pesfds not empty!\n", __FUNCTION__); /* TODO: error handling */
-		return false;
-	}
-	int n = DMX_SOURCE_FRONT0;
-	if (ioctl(fd, DMX_SET_SOURCE, &n) < 0)
-		hal_info("%s DMX_SET_SOURCE %d failed! (%m)\n", __func__, n);
-#endif
 	if (uBufferSize > 0)
 	{
 		/* probably uBufferSize == 0 means "use default size". TODO: find a reasonable default */
@@ -187,11 +177,6 @@ bool cDemux::Stop(void)
 
 int cDemux::Read(unsigned char *buff, int len, int timeout)
 {
-#if 0
-	if (len != 4095 && timeout != 100)
-		fprintf(stderr, "cDemux::%s #%d fd: %d type: %s len: %d timeout: %d\n",
-			__FUNCTION__, num, fd, DMX_T[dmx_type], len, timeout);
-#endif
 	int rc;
 	struct pollfd ufds;
 	ufds.fd = fd;
@@ -213,14 +198,6 @@ int cDemux::Read(unsigned char *buff, int len, int timeout)
 				goto retry;
 			return -1;
 		}
-#if 0
-		if (ufds.revents & POLLERR) /* POLLERR means buffer error, i.e. buffer overflow */
-		{
-			dmx_err("received %s,", "POLLERR", ufds.revents);
-			/* this seems to happen sometimes at recording start, without bad effects */
-			return 0;
-		}
-#endif
 		if (ufds.revents & POLLHUP) /* we get POLLHUP if e.g. a too big DMX_BUFFER_SIZE was set */
 		{
 			dmx_err("received %s,", "POLLHUP", ufds.revents);
@@ -345,11 +322,6 @@ bool cDemux::sectionFilter(unsigned short _pid, const unsigned char * const filt
 
 	hal_debug("%s #%d pid:0x%04hx fd:%d type:%s len:%d to:%d flags:%x flt[0]:%02x\n", __func__, num,
 		pid, fd, DMX_T[dmx_type], len, s_flt.timeout,s_flt.flags, s_flt.filter.filter[0]);
-#if 0
-	fprintf(stderr,"filt: ");for(int i=0;i<DMX_FILTER_SIZE;i++)fprintf(stderr,"%02hhx ",s_flt.filter.filter[i]);fprintf(stderr,"\n");
-	fprintf(stderr,"mask: ");for(int i=0;i<DMX_FILTER_SIZE;i++)fprintf(stderr,"%02hhx ",s_flt.filter.mask  [i]);fprintf(stderr,"\n");
-	fprintf(stderr,"mode: ");for(int i=0;i<DMX_FILTER_SIZE;i++)fprintf(stderr,"%02hhx ",s_flt.filter.mode  [i]);fprintf(stderr,"\n");
-#endif
 	ioctl (fd, DMX_STOP);
 	if (ioctl(fd, DMX_SET_FILTER, &s_flt) < 0)
 		return false;

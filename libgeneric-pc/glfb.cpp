@@ -248,34 +248,6 @@ void GLFramebuffer::run()
 	hal_info("GLFB: GL thread stopping\n");
 }
 
-#if 0
-void GLFbPC::setupCtx()
-{
-	int argc = 1;
-	/* some dummy commandline for GLUT to be happy */
-	char const *argv[2] = { "neutrino", 0 };
-	hal_info("GLFB: GL thread starting x %d y %d\n", mX[0], mY[0]);
-	glutInit(&argc, const_cast<char **>(argv));
-	glutInitWindowSize(mX[0], mY[0]);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-	glutCreateWindow("Neutrino");
-}
-
-void GLFbPC::setupOSDBuffer()
-{	/* the OSD buffer size can be decoupled from the actual
-	   window size since the GL can blit-stretch with no
-	   trouble at all, ah, the luxury of ignorance... */
-	// mMutex.lock();
-	if (mState.width && mState.height)
-	{
-		/* 32bit FB depth, *2 because tuxtxt uses a shadow buffer */
-		int fbmem = mState.width * mState.height * 4 * 2;
-		osd_buf->resize(fbmem);
-		hal_info("GLFB: OSD buffer set to %d bytes at 0x%p\n", fbmem, osd_buf->data());
-	}
-}
-#endif
-
 void GLFbPC::setupGLObjects()
 {
 	unsigned char buf[4] = { 0, 0, 0, 0 }; /* 1 black pixel */

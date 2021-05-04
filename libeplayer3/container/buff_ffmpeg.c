@@ -171,13 +171,6 @@ static int32_t ffmpeg_read_wrapper(void *opaque, uint8_t *buf, int32_t buf_size)
 	}
 }
 
-#if 0
-static int32_t ffmpeg_read_wrapper2(void *opaque, uint8_t *buf, int32_t buf_size)
-{
-	return ffmpeg_read_wrapper_base(opaque, buf, buf_size, 1);
-}
-#endif
-
 //for buffered io
 void getfillerMutex(const char *filename __attribute__((unused)), const char *function __attribute__((unused)), int line __attribute__((unused)))
 {
@@ -194,15 +187,6 @@ void releasefillerMutex(const char *filename __attribute__((unused)), const char
 
 	ffmpeg_printf(100, "::%d released mutex\n", line);
 }
-
-//for buffered io (end)encoding
-#if 0
-static int32_t container_set_ffmpeg_buf_seek_time(int32_t *time)
-{
-	ffmpeg_buf_seek_time = (*time);
-	return cERR_CONTAINER_FFMPEG_NO_ERROR;
-}
-#endif
 
 static int32_t container_set_ffmpeg_buf_size(int32_t *size)
 {
@@ -247,14 +231,6 @@ static int32_t container_get_fillbufstatus(int32_t *size)
 
 	return cERR_CONTAINER_FFMPEG_NO_ERROR;
 }
-
-#if 0
-static int32_t container_stop_buffer()
-{
-	ffmpeg_buf_stop = 1;
-	return 0;
-}
-#endif
 
 //flag 0: start direct
 //flag 1: from thread

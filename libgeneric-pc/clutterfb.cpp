@@ -333,10 +333,6 @@ void GLFbPC::render()
 		int yoff = 0;
 		mVAchanged = true;
 		mReInit = false;
-#if 0
-		mX = &_mX[mFullscreen];
-		mY = &_mY[mFullscreen];
-#endif
 		*mX = *mY * mOA.num / mOA.den;
 		if (mFullscreen) {
 			clutter_stage_set_fullscreen(CLUTTER_STAGE(stage), TRUE);

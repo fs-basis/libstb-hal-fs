@@ -234,22 +234,6 @@ GstBusSyncReply Gst_bus_call(GstBus * bus, GstMessage *msg, gpointer user_data)
 			}
 			break;
 		}
-#if 0
-		case GST_MESSAGE_ELEMENT:
-		{
-			if(gst_structure_has_name(gst_message_get_structure(msg), "prepare-xwindow-id")) 
-			{
-				// set window id
-				gst_x_overlay_set_xwindow_id(GST_X_OVERLAY(GST_MESSAGE_SRC (msg)), glfb->getWindowID());
-				
-				// reshape window
-				gst_x_overlay_set_render_rectangle(GST_X_OVERLAY(GST_MESSAGE_SRC (msg)), 0, 0, glfb->getOSDWidth(), glfb->getOSDHeight());
-				
-				// sync frames
-				gst_x_overlay_expose(GST_X_OVERLAY(GST_MESSAGE_SRC (msg)));
-			}
-		}
-#endif
 		break;
 		default:
 			break;

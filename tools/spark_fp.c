@@ -56,47 +56,12 @@ void usage()
 	printf("\n");
 }
 
-#if 0
-double mod_julian_date(struct tm *t)
-{
-	double date;
-	int month;
-	int day;
-	int year;
-
-	year  = t->tm_year + 1900;
-	month = t->tm_mon + 1;
-	day   = t->tm_mday;
-
-	date = day - 32076 +
-		1461 * (year + 4800 + (month - 14) / 12) / 4 +
-		367 *  (month - 2 -   (month - 14) / 12 * 12) / 12 -
-		3 *   ((year + 4900 + (month - 14) / 12 ) / 100) / 4;
-
-	date += (t->tm_hour + 12.0) / 24.0;
-	date += (t->tm_min) / 1440.0;
-	date += (t->tm_sec) / 86400.0;
-	date -= 2400000.5;
-
-	return date;
-}
-#endif
-
 void time_to_aotom(time_t t, char *dest)
 {
 	/* from u-boot aotom */
 	struct tm* tmp;
 	tmp = localtime(&t);
-#if 0
-	/* this mjd stuff is totally useless: driver only uses dest[2] and dest[3]... */
-	double mjd = mod_julian_date(tmp);
-	int mjd_int = mjd;
-
-	dest[0] = mjd_int >> 8;
-	dest[1] = mjd_int & 0xff;
-#else
 	dest[0] = dest[1] = 0;
-#endif
 	dest[2] = tmp->tm_hour;
 	dest[3] = tmp->tm_min;
 	dest[4] = tmp->tm_sec;

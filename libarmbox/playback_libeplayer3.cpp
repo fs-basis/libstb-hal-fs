@@ -721,19 +721,6 @@ int cPlayback::GetTeletextPid(void)
 	return pid;
 }
 
-#if 0
-/* dummy functions for subtitles */
-void cPlayback::FindAllSubs(uint16_t * /*pids*/, unsigned short * /*supp*/, uint16_t *num, std::string * /*lang*/)
-{
-	*num = 0;
-}
-
-bool cPlayback::SelectSubtitles(int /*pid*/)
-{
-	return false;
-}
-#endif
-
 void cPlayback::GetChapters(std::vector<int> &positions, std::vector<std::string> &titles)
 {
 	positions.clear();
@@ -859,22 +846,3 @@ void cPlayback::ReleaseAVFormatContext()
 	avft->streams = NULL;
 	avft->nb_streams = NULL;
 }
-
-#if 0
-bool cPlayback::IsPlaying(void) const
-{
-	hal_info("%s\n", __func__);
-
-	/* konfetti: there is no event/callback mechanism in libeplayer2
-	 * so in case of ending playback we have no information on a
-	 * terminated stream currently (or did I oversee it?).
-	 * So let's ask the player the state.
-	 */
-	if (playing)
-	{
-		return player->playback->isPlaying;
-	}
-
-	return playing;
-}
-#endif

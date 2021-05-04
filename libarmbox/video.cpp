@@ -497,28 +497,11 @@ int cVideo::getAspectRatio(void)
 int cVideo::setCroppingMode(int /*vidDispMode_t format*/)
 {
 	return 0;
-#if 0
-	croppingMode = format;
-	const char *format_string[] = { "norm", "letterbox", "unknown", "mode_1_2", "mode_1_4", "mode_2x", "scale", "disexp" };
-	const char *f;
-	if (format >= VID_DISPMODE_NORM && format <= VID_DISPMODE_DISEXP)
-		f = format_string[format];
-	else
-		f = "ILLEGAL format!";
-	hal_debug("%s(%d) => %s\n", __FUNCTION__, format, f);
-	return fop(ioctl, MPEG_VID_SET_DISPMODE, format);
-#endif
 }
 
 int cVideo::Start(void * /*PcrChannel*/, unsigned short /*PcrPid*/, unsigned short /*VideoPid*/, void * /*hChannel*/)
 {
 	hal_debug("#%d: %s playstate=%d\n", devnum, __func__, playstate);
-#if 0
-	if (playstate == VIDEO_PLAYING)
-		return 0;
-	if (playstate == VIDEO_FREEZED)  /* in theory better, but not in practice :-) */
-		fop(ioctl, MPEG_VID_CONTINUE);
-#endif
 	/* implicitly do StopPicture() on video->Start() */
 	if (stillpicture) {
 		hal_info("%s: stillpicture == true, doing implicit StopPicture()\n", __func__);
@@ -730,14 +713,8 @@ void cVideo::Standby(unsigned int bOn)
 
 int cVideo::getBlank(void)
 {
-#if 0
-	int ret = proc_get_hex(VMPEG_xres[devnum]);
-	hal_debug("%s => %d\n", __func__, !ret);
-	return !ret;
-#else
 	hal_debug("%s => %d\n", __func__, blank_mode);
 	return blank_mode;
-#endif
 }
 
 void cVideo::ShowPig(int _x)

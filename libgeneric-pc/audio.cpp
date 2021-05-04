@@ -182,16 +182,6 @@ int cAudio::WriteClip(unsigned char *buffer, int size)
 int cAudio::StopClip()
 {
 	hal_debug("%s\n", __func__);
-#if 0
-	/* don't do anything - closing / reopening ao all the time makes for long delays
-	 * reinit on-demand (e.g. for changed parameters) instead */
-	if (!adevice) {
-		hal_info("%s: adevice not opened?\n", __func__);
-		return 0;
-	}
-	ao_close(adevice);
-	adevice = NULL;
-#endif
 	return 0;
 };
 
@@ -436,12 +426,6 @@ void cAudio::run()
 			hal_info("libao driver: %d name '%s' short '%s' author '%s'\n",
 				driver, ai->name, ai->short_name, ai->author);
 	}
-#if 0
-	hal_info(" driver options:");
-	for (int i = 0; i < ai->option_count; ++i)
-		fprintf(stderr, " %s", ai->options[i]);
-	fprintf(stderr, "\n");
-#endif
 	av_get_sample_fmt_string(tmp, sizeof(tmp), c->sample_fmt);
 	hal_info("decoding %s, sample_fmt %d (%s) sample_rate %d channels %d\n",
 		 avcodec_get_name(p->codec_id), c->sample_fmt, tmp, p->sample_rate, p->channels);

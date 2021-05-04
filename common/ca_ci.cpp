@@ -490,17 +490,6 @@ void cCA::MenuEnter(enum CA_SLOT_TYPE, uint32_t bSlotIndex)
 
 	for (it = slot_data.begin(); it != slot_data.end(); ++it)
 	{
-#if 0
-		if ((strstr((*it)->name, "unknown module") != NULL) && ((*it)->slot == bSlotIndex))
-		{
-			//the module has no real name, this is the matter if something while initializing went wrong
-			//so let this take as a reset action for the module so we do not need to add a reset
-			//feature to the neutrino menu
-			ModuleReset(SlotType, bSlotIndex);
-
-			return;
-		}
-#endif
 		if ((*it)->slot == bSlotIndex)
 		{
 			if ((*it)->hasAppManager)

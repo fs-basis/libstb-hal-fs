@@ -83,10 +83,6 @@ static inline int aac_get_sample_rate_index(uint32_t sample_rate)
 		return 13;
 }
 
-#if 0
-static unsigned char DefaultAACHeader[] = {0xff,0xf1,0x50,0x80,0x00,0x1f,0xfc};
-#endif
-
 class WriterAAC : public Writer
 {
 	private:

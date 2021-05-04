@@ -113,11 +113,6 @@ static void __inline encode_DC(BW *p, int level, int n)
 
 static void __inline encode_escape_3(BW *p, int last, int run, int level)
 {
-#if 0
-	put_bits(p,
-	         7 + 2 + 1 + 6 + 1 + 12 + 1, //30bit
-	         (3 << 23) + (3 << 21) + (last << 20) + (run << 14) + (1 << 13) + (((level - 64) & 0xfff) << 1) + 1);
-#else
 	put_bits(p, 7, 3); // escape
 	put_bits(p, 2, 3); // escape3
 	put_bits(p, 1, last);
@@ -125,7 +120,6 @@ static void __inline encode_escape_3(BW *p, int last, int run, int level)
 	put_bits(p, 1, 1); // marker
 	put_bits(p, 12, ((level - 64) & 0xfff));
 	put_bits(p, 1, 1); // marker
-#endif
 }
 
 #define UNI_MPEG4_ENC_INDEX(last, run, level) ((last)*128*64 + (run)*128 + (level))

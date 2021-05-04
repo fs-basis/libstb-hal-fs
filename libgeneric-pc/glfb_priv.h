@@ -103,10 +103,6 @@ private:
 #endif
 
 	void initKeys();		/* setup key bindings for window */
-#if 0
-	void setupCtx();		/* create the window and make the context current */
-	void setupOSDBuffer();		/* create the OSD buffer */
-#endif
 
 	struct {
 		int width;		/* width and height, fixed for a framebuffer instance */

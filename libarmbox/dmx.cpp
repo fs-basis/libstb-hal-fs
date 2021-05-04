@@ -228,11 +228,6 @@ bool cDemux::Stop(void)
 
 int cDemux::Read(unsigned char *buff, int len, int timeout)
 {
-#if 0
-	if (len != 4095 && timeout != 10)
-		fprintf(stderr, "cDemux::%s #%d fd: %d type: %s len: %d timeout: %d\n",
-			__FUNCTION__, num, fd, DMX_T[dmx_type], len, timeout);
-#endif
 	if (fd < 0)
 	{
 		hal_info("%s #%d: not open!\n", __func__, num);
@@ -281,14 +276,6 @@ int cDemux::Read(unsigned char *buff, int len, int timeout)
 				goto retry;
 			return -1;
 		}
-#if 0
-		if (ufds.revents & POLLERR) /* POLLERR means buffer error, i.e. buffer overflow */
-		{
-			dmx_err("received %s,", "POLLERR", ufds.revents);
-			/* this seems to happen sometimes at recording start, without bad effects */
-			return 0;
-		}
-#endif
 		if (ufds.revents & POLLHUP) /* we get POLLHUP if e.g. a too big DMX_BUFFER_SIZE was set */
 		{
 			dmx_err("received %s,", "POLLHUP", ufds.revents);
@@ -423,11 +410,6 @@ bool cDemux::sectionFilter(unsigned short _pid, const unsigned char * const filt
 
 	hal_debug("%s #%d pid:0x%04hx fd:%d type:%s len:%d to:%d flags:%x flt[0]:%02x\n", __func__, num,
 		pid, fd, DMX_T[dmx_type], len, s_flt.timeout, s_flt.flags, s_flt.filter.filter[0]);
-#if 0
-	fprintf(stderr,"filt: "); for (int i = 0; i < len; i++) fprintf(stderr, "%02hhx ", s_flt.filter.filter[i]); fprintf(stderr, "\n");
-	fprintf(stderr,"mask: "); for (int i = 0; i < len; i++) fprintf(stderr, "%02hhx ", s_flt.filter.mask  [i]); fprintf(stderr, "\n");
-	fprintf(stderr,"mode: "); for (int i = 0; i < len; i++) fprintf(stderr, "%02hhx ", s_flt.filter.mode  [i]); fprintf(stderr, "\n");
-#endif
 	ioctl (fd, DMX_STOP);
 	if (ioctl(fd, DMX_SET_FILTER, &s_flt) < 0)
 		return false;

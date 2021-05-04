@@ -329,45 +329,6 @@ void cAudio::getAudioInfo(int &type, int &layer, int &freq, int &bitrate, int &m
 	freq = 0;
 	bitrate = 0;
 	mode = 0;
-#if 0
-	unsigned int atype;
-	static const int freq_mpg[] = {44100, 48000, 32000, 0};
-	static const int freq_ac3[] = {48000, 44100, 32000, 0};
-	scratchl2 i;
-	if (ioctl(fd, MPEG_AUD_GET_DECTYP, &atype) < 0)
-		perror("cAudio::getAudioInfo MPEG_AUD_GET_DECTYP");
-	if (ioctl(fd, MPEG_AUD_GET_STATUS, &i) < 0)
-		perror("cAudio::getAudioInfo MPEG_AUD_GET_STATUS");
-
-	type = atype;
-#if 0
-/* this does not work, some of the values are negative?? */
-	AMPEGStatus A;
-	memcpy(&A, &i.word00, sizeof(i.word00));
-	layer   = A.audio_mpeg_layer;
-	mode    = A.audio_mpeg_mode;
-	bitrate = A.audio_mpeg_bitrate;
-	switch(A.audio_mpeg_frequency)
-#endif
-	/* layer and bitrate are not used anyway... */
-	layer   = 0; //(i.word00 >> 17) & 3;
-	bitrate = 0; //(i.word00 >> 12) & 3;
-	switch (type)
-	{
-		case 0:	/* MPEG */
-			mode = (i.word00 >> 6) & 3;
-			freq = freq_mpg[(i.word00 >> 10) & 3];
-			break;
-		case 1:	/* AC3 */
-			mode = (i.word00 >> 28) & 7;
-			freq = freq_ac3[(i.word00 >> 16) & 3];
-			break;
-		default:
-			mode = 0;
-			freq = 0;
-	}
-	//fprintf(stderr, "type: %d layer: %d freq: %d bitrate: %d mode: %d\n", type, layer, freq, bitrate, mode);
-#endif
 };
 
 void cAudio::SetSRS(int /*iq_enable*/, int /*nmgr_enable*/, int /*iq_mode*/, int /*iq_level*/)

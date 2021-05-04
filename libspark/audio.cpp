@@ -113,19 +113,6 @@ int cAudio::setVolume(unsigned int left, unsigned int right)
 
 	volume = (left + right) / 2;
 	int v = map_volume(volume);
-#if 0
-	if (clipfd != -1 && mixer_fd != -1) {
-		int tmp = 0;
-		/* not sure if left / right is correct here, but it is always the same anyways ;-) */
-		if (! Muted)
-			tmp = left << 8 | right;
-		int ret = ioctl(mixer_fd, MIXER_WRITE(mixer_num), &tmp);
-		if (ret == -1)
-			hal_info("%s: MIXER_WRITE(%d),%04x: %m\n", __func__, mixer_num, tmp);
-		return ret;
-	}
-#endif
-
 	char str[4];
 	sprintf(str, "%d", v);
 
@@ -320,15 +307,6 @@ void cAudio::getAudioInfo(int &type, int &layer, int &freq, int &bitrate, int &m
 		perror("cAudio::getAudioInfo MPEG_AUD_GET_STATUS");
 
 	type = atype;
-#if 0
-/* this does not work, some of the values are negative?? */
-	AMPEGStatus A;
-	memcpy(&A, &i.word00, sizeof(i.word00));
-	layer   = A.audio_mpeg_layer;
-	mode    = A.audio_mpeg_mode;
-	bitrate = A.audio_mpeg_bitrate;
-	switch(A.audio_mpeg_frequency)
-#endif
 	/* layer and bitrate are not used anyway... */
 	layer   = 0; //(i.word00 >> 17) & 3;
 	bitrate = 0; //(i.word00 >> 12) & 3;

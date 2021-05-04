@@ -480,9 +480,6 @@ bool Input::Init(const char *filename, std::string headers)
 	subtitleTrack = NULL;
 	teletextTrack = NULL;
 
-#if 0
-again:
-#endif
 	avfc = avformat_alloc_context();
 	avfc->interrupt_callback.callback = interrupt_cb;
 	avfc->interrupt_callback.opaque = (void *) player;
@@ -517,28 +514,8 @@ again:
 #endif
 		avfc->probesize = 131072;
 	}
-#if 0
-	if (!player->isHttp)
-	{
-		for (unsigned int i = 0; i < avfc->nb_streams; i++) {
-			if (avfc->streams[i]->codec->codec_id == AV_CODEC_ID_AAC)
-				find_info = false;
-		}
-	}
-#endif
 	if (find_info)
 		err = avformat_find_stream_info(avfc, NULL);
-
-#if 0
-	if (averror(err, avformat_find_stream_info)) {
-		avformat_close_input(&avfc);
-		if (player->noprobe) {
-			player->noprobe = false;
-			goto again;
-		}
-		return false;
-	}
-#endif
 
 	bool res = UpdateTracks();
 

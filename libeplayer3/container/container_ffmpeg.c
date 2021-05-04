@@ -1995,13 +1995,6 @@ int32_t container_ffmpeg_update_tracks(Context_t *context, char *filename, int32
 		context->manager->audio->Command(context, MANAGER_INIT_UPDATE, NULL);
 	}
 
-#if 0
-	if (context->manager->subtitle)
-	{
-		context->manager->subtitle->Command(context, MANAGER_INIT_UPDATE, NULL);
-	}
-#endif
-
 	ffmpeg_printf(20, "dump format\n");
 	if ((avContextTab[0] != NULL) && (FFMPEG_DEBUG_LEVEL > 0))
 		av_dump_format(avContextTab[0], 0, filename, 0);
@@ -2840,101 +2833,6 @@ static int32_t container_ffmpeg_seek_bytes(off_t pos)
 	return cERR_CONTAINER_FFMPEG_NO_ERROR;
 }
 
-#if 0 //unused
-/* seeking relative to a given byteposition N seconds ->for reverse playback needed */
-static int32_t container_ffmpeg_seek_rel(Context_t *context, off_t pos, int64_t pts, int64_t sec)
-{
-	Track_t *videoTrack = NULL;
-	Track_t *audioTrack = NULL;
-	Track_t *current = NULL;
-	seek_target_flag = 0;
-
-	ffmpeg_printf(10, "seeking %" PRId64 " sec relativ to %" PRId64 "\n", sec, pos);
-
-	context->manager->video->Command(context, MANAGER_GET_TRACK, &videoTrack);
-	context->manager->audio->Command(context, MANAGER_GET_TRACK, &audioTrack);
-
-	if (videoTrack != NULL)
-	{
-		current = videoTrack;
-	}
-	else if (audioTrack != NULL)
-	{
-		current = audioTrack;
-	}
-
-	if (current == NULL)
-	{
-		ffmpeg_err("no track avaibale to seek\n");
-		return cERR_CONTAINER_FFMPEG_ERR;
-	}
-
-	if (pos == -1)
-	{
-		pos = avio_tell(avContextTab[0]->pb);
-	}
-
-	if (pts == -1)
-	{
-		pts = current->pts;
-	}
-
-	if (sec < 0)
-	{
-		seek_target_flag |= AVSEEK_FLAG_BACKWARD;
-	}
-
-	ffmpeg_printf(10, "iformat->flags %d\n", avContextTab[0]->iformat->flags);
-#if defined(TS_BYTES_SEEKING) && TS_BYTES_SEEKING
-	if (avContextTab[0]->iformat->flags & AVFMT_TS_DISCONT)
-	{
-		if (avContextTab[0]->bit_rate)
-		{
-			sec *= avContextTab[0]->bit_rate / 8;
-			ffmpeg_printf(10, "bit_rate %d\n", avContextTab[0]->bit_rate);
-		}
-		else
-		{
-			sec *= 180000;
-		}
-
-		pos += sec;
-
-		if (pos < 0)
-		{
-			ffmpeg_err("end of file reached\n");
-			releaseMutex(__FILE__, __FUNCTION__, __LINE__);
-			return cERR_CONTAINER_FFMPEG_END_OF_FILE;
-		}
-
-		ffmpeg_printf(10, "1. seeking to position %" PRId64 " bytes ->sec %f\n", pos, sec);
-
-		seek_target_bytes = pos;
-		do_seek_target_bytes = 1;
-
-		return pos;
-	}
-	else
-#endif
-	{
-		sec += pts / 90000;
-
-		if (sec < 0)
-		{
-			sec = 0;
-		}
-
-		ffmpeg_printf(10, "2. seeking to position %" PRId64 " sec ->time base %f %d\n", sec, av_q2d(((AVStream *) current->stream)->time_base), AV_TIME_BASE);
-
-		seek_target_seconds = sec * AV_TIME_BASE;
-		do_seek_target_seconds = 1;
-	}
-
-	releaseMutex(__FILE__, __FUNCTION__, __LINE__);
-	return cERR_CONTAINER_FFMPEG_NO_ERROR;
-}
-#endif
-
 static int32_t container_ffmpeg_seek(Context_t *context, int64_t sec, uint8_t absolute)
 {
 	Track_t *videoTrack = NULL;
@@ -2980,22 +2878,6 @@ static int32_t container_ffmpeg_seek(Context_t *context, int64_t sec, uint8_t ab
 		ffmpeg_err("no track available to seek\n");
 		return cERR_CONTAINER_FFMPEG_ERR;
 	}
-
-#if 0
-	if (videoTrack != NULL)
-	{
-		current = videoTrack;
-	}
-	else if (audioTrack != NULL)
-	{
-		current = audioTrack;
-	}
-	else
-	{
-		ffmpeg_err("no track available to seek\n");
-		return cERR_CONTAINER_FFMPEG_ERR;
-	}
-#endif
 
 	if (sec < 0)
 	{
