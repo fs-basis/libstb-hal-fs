@@ -20,11 +20,6 @@
 
 #include <linux/soundcard.h>
 
-enum
-{	ENCODER,
-	AUX
-};
-
 cAudio * audioDecoder = NULL;
 
 cAudio::cAudio(void *, void *, void *)
@@ -78,11 +73,6 @@ void cAudio::closeDevice(void)
 		close(mixer_fd);
 		mixer_fd = -1;
 	}
-}
-
-void cAudio::setAVInput(int val)
-{
-	hal_info("%s not implemented yet - switching to: %s\n", __func__, val == AUX ? "AUX" : "ENCODER");
 }
 
 int cAudio::do_mute(bool enable, bool remember)

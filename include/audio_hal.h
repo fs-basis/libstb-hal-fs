@@ -7,8 +7,6 @@
 #include "../libspark/audio_mixer.h"
 #elif HAVE_ARM_HARDWARE
 #include "../libarmbox/audio_lib.h"
-#elif HAVE_MIPS_HARDWARE
-#include "../libmipsbox/audio_lib.h"
 #elif HAVE_GENERIC_HARDWARE
 #if BOXMODEL_RASPI
 #include "../libraspi/audio_lib.h"

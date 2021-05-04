@@ -238,29 +238,12 @@ static bool transmitData(eDVBCISlot* slot, unsigned char* d, int len)
 {
 	printf("%s -> %s len(%d)\n", FILENAME, __func__, len);
 
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUZERO4K
-#if y_debug
-	for (int i = 0; i < len; i++)
-		printf("%02x ", d[i]);
-	printf("\n");
-#endif
-	int res = write(slot->fd, d, len);
-	printf("send: %d len: %d\n", res, len);
-
-	free(d);
-	if (res < 0 || res != len)
-	{
-		printf("error writing data to fd %d, slot %d: %m\n", slot->fd, slot->slot);
-		return false;
-	}
-#else
 #if y_debug
 	for (int i = 0; i < len; i++)
 		printf("%02x ", d[i]);
 	printf("\n");
 #endif
 	slot->sendqueue.push(queueData(d, len));
-#endif
 	return true;
 }
 
@@ -1026,70 +1009,6 @@ void cCA::setSource(eDVBCISlot* slot)
 			case TUNER_D:
 				fprintf(ci, "D");
 				break;
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K
-			case TUNER_E:
-				fprintf(ci, "E");
-				break;
-			case TUNER_F:
-				fprintf(ci, "F");
-				break;
-			case TUNER_G:
-				fprintf(ci, "G");
-				break;
-			case TUNER_H:
-				fprintf(ci, "H");
-				break;
-			case TUNER_I:
-				fprintf(ci, "I");
-				break;
-			case TUNER_J:
-				fprintf(ci, "J");
-				break;
-			case TUNER_K:
-				fprintf(ci, "K");
-				break;
-			case TUNER_L:
-				fprintf(ci, "L");
-				break;
-			case TUNER_M:
-				fprintf(ci, "M");
-				break;
-			case TUNER_N:
-				fprintf(ci, "N");
-				break;
-			case TUNER_O:
-				fprintf(ci, "O");
-				break;
-			case TUNER_P:
-				fprintf(ci, "P");
-				break;
-#if BOXMODEL_VUULTIMO4K
-			case TUNER_Q:
-				fprintf(ci, "Q");
-				break;
-			case TUNER_R:
-				fprintf(ci, "R");
-				break;
-			case TUNER_S:
-				fprintf(ci, "S");
-				break;
-			case TUNER_T:
-				fprintf(ci, "T");
-				break;
-			case TUNER_U:
-				fprintf(ci, "U");
-				break;
-			case TUNER_V:
-				fprintf(ci, "V");
-				break;
-			case TUNER_W:
-				fprintf(ci, "W");
-				break;
-			case TUNER_X:
-				fprintf(ci, "X");
-				break;
-#endif
-#endif
 		}
 		fclose(ci);
 	}
@@ -1104,15 +1023,7 @@ void cCA::setInputs()
 	char choices[64];
 	FILE * fd = 0;
 
-#if BOXMODEL_VUULTIMO4K
-	for (int number = 0; number < 24; number++) // tuner A to X, input 0 to 23
-#else
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-	for (int number = 0; number < 16; number++) // tuner A to P, input 0 to 15
-#else
 	for (int number = 0; number < 4; number++) // tuner A to D, input 0 to 3
-#endif
-#endif
 	{
 		snprintf(choices, 64, "/proc/stb/tsmux/input%d_choices", number);
 		if(access(choices, R_OK) < 0)
@@ -1173,70 +1084,6 @@ void cCA::setInputSource(eDVBCISlot* slot, bool ci)
 				case TUNER_D:
 					fprintf(input, "D");
 					break;
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-				case TUNER_E:
-					fprintf(input, "E");
-					break;
-				case TUNER_F:
-					fprintf(input, "F");
-					break;
-				case TUNER_G:
-					fprintf(input, "G");
-					break;
-				case TUNER_H:
-					fprintf(input, "H");
-					break;
-				case TUNER_I:
-					fprintf(input, "I");
-					break;
-				case TUNER_J:
-					fprintf(input, "J");
-					break;
-				case TUNER_K:
-					fprintf(input, "K");
-					break;
-				case TUNER_L:
-					fprintf(input, "L");
-					break;
-				case TUNER_M:
-					fprintf(input, "M");
-					break;
-				case TUNER_N:
-					fprintf(input, "N");
-					break;
-				case TUNER_O:
-					fprintf(input, "O");
-					break;
-				case TUNER_P:
-					fprintf(input, "P");
-					break;
-#if BOXMODEL_VUULTIMO4K
-				case TUNER_Q:
-					fprintf(input, "Q");
-					break;
-				case TUNER_R:
-					fprintf(input, "R");
-					break;
-				case TUNER_S:
-					fprintf(input, "S");
-					break;
-				case TUNER_T:
-					fprintf(input, "T");
-					break;
-				case TUNER_U:
-					fprintf(input, "U");
-					break;
-				case TUNER_V:
-					fprintf(input, "V");
-					break;
-				case TUNER_W:
-					fprintf(input, "W");
-					break;
-				case TUNER_X:
-					fprintf(input, "X");
-					break;
-#endif
-#endif
 			}
 		}
 		fclose(input);
@@ -1943,31 +1790,3 @@ void cCA::SetTSClock(u32 Speed, int slot)
 		fclose(ci);
 	}
 }
-
-#if BOXMODEL_VUPLUS_ALL
-void cCA::SetCIDelay(int Delay)
-{
-	char buf[64];
-	snprintf(buf, 64, "/proc/stb/tsmux/rmx_delay");
-	FILE *ci = fopen(buf, "wb");
-	printf("%s -> %s to: %i\n", FILENAME, __func__, Delay);
-	if (ci)
-	{
-		fprintf(ci, "%i", Delay);
-		fclose(ci);
-	}
-}
-
-void cCA::SetCIRelevantPidsRouting(int RPR, int slot)
-{
-	char buf[64];
-	snprintf(buf, 64, "/proc/stb/tsmux/ci%d_relevant_pids_routing", slot);
-	FILE *ci = fopen(buf, "wb");
-	printf("%s -> %s to: %i\n", FILENAME, __func__, RPR);
-	if (ci)
-	{
-		fprintf(ci, "%s", RPR == 1 ? "yes" : "no");
-		fclose(ci);
-	}
-}
-#endif

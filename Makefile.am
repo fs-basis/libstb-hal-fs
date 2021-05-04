@@ -55,16 +55,6 @@ libstb_hal_la_LIBADD += \
 endif
 endif
 
-if BOXTYPE_MIPSBOX
-SUBDIRS += libmipsbox libdvbci
-libstb_hal_la_LIBADD += \
-	libmipsbox/libmipsbox.la \
-	libdvbci/libdvbci.la
-SUBDIRS += libeplayer3
-libstb_hal_la_LIBADD += \
-	libeplayer3/libeplayer3.la
-endif
-
 pkginclude_HEADERS = \
 	include/audio_hal.h \
 	include/ca.h \
