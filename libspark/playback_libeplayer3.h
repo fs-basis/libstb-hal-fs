@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-typedef enum {
+typedef enum
+{
 	PLAYMODE_TS = 0,
 	PLAYMODE_FILE
 } playmode_t;
@@ -14,7 +15,7 @@ struct AVFormatContext;
 
 class cPlayback
 {
-	friend class CStreamInfo2;
+		friend class CStreamInfo2;
 
 	private:
 		bool enabled;

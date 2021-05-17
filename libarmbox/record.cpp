@@ -1,5 +1,5 @@
 /*
- * (C) 
+ * (C)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,17 +142,21 @@ bool cRecord::ChangePids(unsigned short /*vpid*/, unsigned short *apids, int num
 	bool found;
 	unsigned short pid;
 	hal_info("%s\n", __func__);
-	if (!dmx) {
+	if (!dmx)
+	{
 		hal_info("%s: DMX = NULL\n", __func__);
 		return false;
 	}
 	pids = dmx->pesfds;
 	/* the first PID is the video pid, so start with the second PID... */
-	for (std::vector<pes_pids>::const_iterator i = pids.begin() + 1; i != pids.end(); ++i) {
+	for (std::vector<pes_pids>::const_iterator i = pids.begin() + 1; i != pids.end(); ++i)
+	{
 		found = false;
 		pid = (*i).pid;
-		for (j = 0; j < numapids; j++) {
-			if (pid == apids[j]) {
+		for (j = 0; j < numapids; j++)
+		{
+			if (pid == apids[j])
+			{
 				found = true;
 				break;
 			}
@@ -160,10 +164,13 @@ bool cRecord::ChangePids(unsigned short /*vpid*/, unsigned short *apids, int num
 		if (!found)
 			dmx->removePid(pid);
 	}
-	for (j = 0; j < numapids; j++) {
+	for (j = 0; j < numapids; j++)
+	{
 		found = false;
-		for (std::vector<pes_pids>::const_iterator i = pids.begin() + 1; i != pids.end(); ++i) {
-			if ((*i).pid == apids[j]) {
+		for (std::vector<pes_pids>::const_iterator i = pids.begin() + 1; i != pids.end(); ++i)
+		{
+			if ((*i).pid == apids[j])
+			{
 				found = true;
 				break;
 			}
@@ -178,12 +185,14 @@ bool cRecord::AddPid(unsigned short pid)
 {
 	std::vector<pes_pids> pids;
 	hal_info("%s: \n", __func__);
-	if (!dmx) {
+	if (!dmx)
+	{
 		hal_info("%s: DMX = NULL\n", __func__);
 		return false;
 	}
 	pids = dmx->pesfds;
-	for (std::vector<pes_pids>::const_iterator i = pids.begin(); i != pids.end(); ++i) {
+	for (std::vector<pes_pids>::const_iterator i = pids.begin(); i != pids.end(); ++i)
+	{
 		if ((*i).pid == pid)
 			return true; /* or is it an error to try to add the same PID twice? */
 	}
@@ -195,14 +204,16 @@ void cRecord::WriterThread()
 	char threadname[17];
 	strncpy(threadname, "WriterThread", sizeof(threadname));
 	threadname[16] = 0;
-	prctl (PR_SET_NAME, (unsigned long)&threadname);
+	prctl(PR_SET_NAME, (unsigned long)&threadname);
 	unsigned int chunk = 0;
-	while (!sem_wait(&sem)) {
+	while (!sem_wait(&sem))
+	{
 		if (!io_len[chunk]) // empty, assume end of recording
 			return;
 		unsigned char *p_buf = io_buf[chunk];
 		size_t p_len = io_len[chunk];
-		while (p_len) {
+		while (p_len)
+		{
 			ssize_t written = write(file_fd, p_buf, p_len);
 			if (written < 0)
 				break;
@@ -222,7 +233,7 @@ void cRecord::RecordThread()
 	char threadname[17];
 	strncpy(threadname, "RecordThread", sizeof(threadname));
 	threadname[16] = 0;
-	prctl (PR_SET_NAME, (unsigned long)&threadname);
+	prctl(PR_SET_NAME, (unsigned long)&threadname);
 	int readsize = bufsize / 16;
 	int buf_pos = 0;
 	int count = 0;
@@ -243,7 +254,7 @@ void cRecord::RecordThread()
 	}
 
 	int val = fcntl(file_fd, F_GETFL);
-	if (fcntl(file_fd, F_SETFL, val|O_APPEND))
+	if (fcntl(file_fd, F_SETFL, val | O_APPEND))
 		hal_info("%s: O_APPEND? (%m)\n", __func__);
 
 	memset(&a, 0, sizeof(a));
@@ -258,7 +269,8 @@ void cRecord::RecordThread()
 	{
 		if (buf_pos < bufsize)
 		{
-			if (overflow_count) {
+			if (overflow_count)
+			{
 				hal_info("%s: Overflow cleared after %d iterations\n", __func__, overflow_count);
 				overflow_count = 0;
 			}
@@ -267,7 +279,7 @@ void cRecord::RecordThread()
 				toread = readsize;
 			ssize_t s = dmx->Read(buf + buf_pos, toread, 50);
 			hal_debug("%s: buf_pos %6d s %6d / %6d\n", __func__,
-				buf_pos, (int)s, bufsize - buf_pos);
+			    buf_pos, (int)s, bufsize - buf_pos);
 			if (s < 0)
 			{
 				if (errno != EAGAIN && (errno != EOVERFLOW || !overflow))

@@ -6,6 +6,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/libeplayer3-sh4/include
 
 AM_CXXFLAGS = -fno-rtti -fno-exceptions -fno-strict-aliasing
+
 AM_LDFLAGS = \
 	-lOpenThreads \
 	@AVFORMAT_LIBS@ \
