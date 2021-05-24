@@ -157,10 +157,13 @@ hw_caps_t *get_hwcaps(void)
 				default:
 					tmp = p;
 			}
-			if ((sys_id & 0xff0000) == 0x090000) {
+			if ((sys_id & 0xff0000) == 0x090000)
+			{
 				caps.boxtype = 7111;
 				strcpy(caps.boxarch, "STX7111");
-			} else {
+			}
+			else
+			{
 				caps.boxtype = 7162;
 				strcpy(caps.boxarch, "STX7105");
 			}
