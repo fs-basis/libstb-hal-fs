@@ -771,6 +771,16 @@ int cVideo::getBlank(void)
 	return !ret;
 }
 
+#if BOXMODEL_VUPLUS_ARM
+void cVideo::QuadPiP(bool active)
+{
+	if (active)
+		proc_put("/proc/stb/video/decodermode", "mosaic", strlen("mosaic"));
+	else
+		proc_put("/proc/stb/video/decodermode", "normal", strlen("normal"));
+}
+#endif
+
 void cVideo::ShowPig(int _x)
 {
 	char buffer[64];
