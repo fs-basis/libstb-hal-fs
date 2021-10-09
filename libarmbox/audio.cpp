@@ -20,7 +20,7 @@
 #include <linux/soundcard.h>
 
 cAudio *audioDecoder = NULL;
-cAudio *pipAudioDecoder = NULL;
+cAudio *pipAudioDecoder[3] = { NULL, NULL, NULL };
 
 static const char *ADEV[] =
 {
