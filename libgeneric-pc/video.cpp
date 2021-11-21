@@ -199,11 +199,11 @@ int cVideo::SetVideoSystem(int system, bool)
 		case VIDEO_STD_480P:
 			h = 480;
 			break;
-		case VIDEO_STD_1080I60:
 		case VIDEO_STD_1080I50:
-		case VIDEO_STD_1080P30:
+		case VIDEO_STD_1080I60:
 		case VIDEO_STD_1080P24:
 		case VIDEO_STD_1080P25:
+		case VIDEO_STD_1080P30:
 		case VIDEO_STD_1080P50:
 			h = 1080;
 			break;
@@ -214,8 +214,8 @@ int cVideo::SetVideoSystem(int system, bool)
 		case VIDEO_STD_AUTO:
 			hal_info("%s: VIDEO_STD_AUTO not implemented\n", __func__);
 		// fallthrough
-		case VIDEO_STD_SECAM:
 		case VIDEO_STD_PAL:
+		case VIDEO_STD_SECAM:
 		case VIDEO_STD_576P:
 			h = 576;
 			break;
