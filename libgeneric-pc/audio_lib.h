@@ -74,7 +74,6 @@ class cAudio : public OpenThreads::Thread
 			return curr_pts;
 		}
 
-		void setAVInput(int val) { return; };
 		void *GetHandle()
 		{
 			return NULL;
