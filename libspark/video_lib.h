@@ -12,7 +12,7 @@ typedef struct cs_vs_format_t
 
 typedef enum
 {
-	COLORFORMAT_RGB = 0x10, // keep compatible with analog_mode_t
+	COLORFORMAT_RGB = 0x10,
 	COLORFORMAT_YUV,
 	COLORFORMAT_CVBS,
 	COLORFORMAT_SVIDEO,
@@ -199,7 +199,6 @@ class cVideo
 		void SetControl(int, int);
 		void VideoParamWatchdog(void);
 		void setContrast(int val);
-		void SetVideoMode(analog_mode_t mode);
 
 		void SetAudioHandle(void *)
 		{
