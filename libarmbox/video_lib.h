@@ -12,20 +12,6 @@ typedef struct cs_vs_format_t
 
 typedef enum
 {
-	ANALOG_SD_RGB_CINCH = 0x00,
-	ANALOG_SD_YPRPB_CINCH,
-	ANALOG_HD_RGB_CINCH,
-	ANALOG_HD_YPRPB_CINCH,
-	ANALOG_SD_RGB_SCART = 0x10,
-	ANALOG_SD_YPRPB_SCART,
-	ANALOG_HD_RGB_SCART,
-	ANALOG_HD_YPRPB_SCART,
-	ANALOG_SCART_MASK = 0x10
-} analog_mode_t;
-
-
-typedef enum
-{
 	HDMI_COLORIMETRY_AUTO,
 	HDMI_COLORIMETRY_BT2020NCL,
 	HDMI_COLORIMETRY_BT2020CL,
@@ -241,7 +227,6 @@ class cVideo
 		void Pig(int x, int y, int w, int h, int osd_w = 1064, int osd_h = 600, int startx = 0, int starty = 0, int endx = 1279, int endy = 719);
 		void SetControl(int, int);
 		void setContrast(int val);
-		void SetVideoMode(analog_mode_t mode);
 
 		void SetAudioHandle(void *)
 		{
