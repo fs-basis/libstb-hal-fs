@@ -32,6 +32,8 @@
 #include "player.h"
 #include "misc.h"
 
+#include <libavcodec/version.h>
+
 static const char *FILENAME = "eplayer/input.cpp";
 
 #define averror(_err,_fun) ({                                       \
@@ -568,8 +570,8 @@ bool Input::Init(const char *filename, std::string headers)
 	avfc->iformat->flags |= AVFMT_SEEK_TO_PTS;
 #else
 	if (!(avfc->iformat->flags & AVFMT_SEEK_TO_PTS)) {
-		printf("[input.cpp] - AVFMT_SEEK_TO_PTS not available - FIXME, FFMPEG 4.5 has problems with some VOB/MPG...\n");
-		return false; // FIXME, FFMPEG 4.5 has problems with some VOB/MPG...
+		printf("[input.cpp] - AVFMT_SEEK_TO_PTS not available - FIXME, FFMPEG >= 4.5 has problems with some VOB/MPG...\n");
+		return false; // FIXME, FFMPEG >= 4.5 has problems with some VOB/MPG...
 	}
 #endif
 	avfc->flags = AVFMT_FLAG_GENPTS;
