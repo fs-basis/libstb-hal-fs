@@ -39,59 +39,6 @@ AC_DISABLE_STATIC
 AC_SYS_LARGEFILE
 AC_PROG_LIBTOOL
 
-AC_ARG_ENABLE(clutter,
-	AS_HELP_STRING(--enable-clutter, use clutter instead of OpenGL),
-	,[enable_clutter=no])
-
-AM_CONDITIONAL(USE_CLUTTER,test "$enable_clutter" = "yes")
-AM_CONDITIONAL(USE_OPENGL,test "$enable_clutter" = "no")
-if test "$enable_clutter" = "yes"; then
-	AC_DEFINE(USE_CLUTTER,1,[use clutter instead of opengl])
-else
-	AC_DEFINE(USE_OPENGL,1,[use opengl instead of clutter])
-fi
-
-AC_ARG_ENABLE(gstreamer_01,
-	AS_HELP_STRING(--enable-gstreamer_01, use gstreamer 0.10 playback),
-	,[enable_gstreamer_01=no])
-
-AM_CONDITIONAL(ENABLE_GSTREAMER_01,test "$enable_gstreamer_01" = "yes")
-if test "$enable_gstreamer_01" = "yes"; then
-	AC_DEFINE(ENABLE_GSTREAMER_01, 1, [use gstreamer 0.10 playback])
-	PKG_CHECK_MODULES([GSTREAMER], [gstreamer-0.10])
-	PKG_CHECK_MODULES([GSTREAMER_INTERFACES], [gstinterfaces-0.10])
-fi
-
-AC_ARG_ENABLE(gstreamer_10,
-	AS_HELP_STRING(--enable-gstreamer_10, use gstreamer 1.0 playback),
-	,[enable_gstreamer_10=no])
-
-AM_CONDITIONAL(ENABLE_GSTREAMER_10, test "$enable_gstreamer_10" = "yes")
-if test "$enable_gstreamer_10" = "yes"; then
-	AC_DEFINE(ENABLE_GSTREAMER_10, 1, [use gstreamer 1.0 playback])
-	PKG_CHECK_MODULES([GSTREAMER], [gstreamer-1.0])
-	PKG_CHECK_MODULES([GSTREAMER_AUDIO], [gstreamer-audio-1.0])
-	PKG_CHECK_MODULES([GSTREAMER_VIDEO], [gstreamer-video-1.0])
-fi
-
-if test x$BOXTYPE = xarmbox -a "$enable_gstreamer_10" = "yes"; then
-	PKG_CHECK_MODULES([GSTREAMER], [gstreamer-1.0])
-	PKG_CHECK_MODULES([GSTREAMER_AUDIO], [gstreamer-audio-1.0])
-	PKG_CHECK_MODULES([GSTREAMER_VIDEO], [gstreamer-video-1.0])
-fi
-
-if test x$BOXTYPE = xgeneric -a x$BOXMODEL != xraspi; then
-	if test x"$enable_clutter" = xyes; then
-		PKG_CHECK_MODULES([CLUTTER], [clutter-1.0])
-	fi
-	PKG_CHECK_MODULES([AVFORMAT], [libavformat >= 53.21.1])
-	PKG_CHECK_MODULES([AVCODEC], [libavcodec >= 54.28.0])
-	# don't know which version is exactly needed here...
-	PKG_CHECK_MODULES([AVUTIL], [libavutil])
-	PKG_CHECK_MODULES([SWSCALE], [libswscale])
-	PKG_CHECK_MODULES([SWRESAMPLE], [libswresample])
-fi
-
 AC_ARG_ENABLE(flv2mpeg4,
 	AS_HELP_STRING(--enable-flv2mpeg4, use flv2mpeg4 libeplayer3),
 	,[enable_flv2mpeg4=no])
@@ -109,8 +56,6 @@ libduckbox/Makefile
 libdvbci/Makefile
 libeplayer3/Makefile
 libeplayer3-sh4/Makefile
-libgeneric-pc/Makefile
-libraspi/Makefile
 libspark/Makefile
 tools/Makefile
 ])

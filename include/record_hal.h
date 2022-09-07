@@ -5,12 +5,6 @@
 #include "../libspark/record_lib.h"
 #elif HAVE_ARM_HARDWARE
 #include "../libarmbox/record_lib.h"
-#elif HAVE_GENERIC_HARDWARE
-#if BOXMODEL_RASPI
-#include "../libraspi/record_lib.h"
-#else
-#include "../libgeneric-pc/record_lib.h"
-#endif
 #else
 #error no valid hardware defined
 #endif

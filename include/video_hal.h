@@ -6,12 +6,6 @@
 #elif HAVE_ARM_HARDWARE
 #include "../libarmbox/video_lib.h"
 #include "../libarmbox/hdmi_cec.h"
-#elif HAVE_GENERIC_HARDWARE
-#if BOXMODEL_RASPI
-#include "../libraspi/video_lib.h"
-#else
-#include "../libgeneric-pc/video_lib.h"
-#endif
 #else
 #error no valid hardware defined
 #endif
