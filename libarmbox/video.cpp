@@ -518,7 +518,6 @@ cVideo::cVideo(int, void *, void *, unsigned int unit)
 	saturation = -1;
 	hue = -1;
 	video_standby = 0;
-	blank_mode = 0;
 	hw_caps_t *hwcaps = get_hwcaps();
 	if (unit > (unsigned int) hwcaps->pip_devs)
 	{
@@ -683,7 +682,6 @@ int cVideo::Start(void * /*PcrChannel*/, unsigned short /*PcrPid*/, unsigned sho
 		SetControl(VIDEO_CONTROL_HUE, hue);
 		hue = -1;
 	}
-	blank_mode = 0;
 	return res;
 }
 
@@ -696,22 +694,16 @@ int cVideo::Stop(bool blank)
 		return -1;
 	}
 	playstate = blank ? VIDEO_STOPPED : VIDEO_FREEZED;
-	blank_mode = blank;
 	return fop(ioctl, VIDEO_STOP, blank ? 1 : 0);
 }
 
-int cVideo::setBlank(int enable)
+int cVideo::setBlank(int)
 {
 	fop(ioctl, VIDEO_PLAY);
 	fop(ioctl, VIDEO_CONTINUE);
-	if (enable)
-	{
-		video_still_picture sp = { NULL, 0 };
-		fop(ioctl, VIDEO_STILLPICTURE, &sp);
-		return Stop(1);
-	}
-	else
-		return Start();
+	video_still_picture sp = { NULL, 0 };
+	fop(ioctl, VIDEO_STILLPICTURE, &sp);
+	return Stop(1);
 }
 
 int cVideo::SetVideoSystem(int video_system, bool remember)
@@ -853,14 +845,9 @@ void cVideo::Standby(unsigned int bOn)
 
 int cVideo::getBlank(void)
 {
-#if 0
 	int ret = proc_get_hex(VMPEG_xres[devnum]);
 	hal_debug("%s => %d\n", __func__, !ret);
 	return !ret;
-#else
-	hal_debug("%s => %d\n", __func__, blank_mode);
-	return blank_mode;
-#endif
 }
 
 void cVideo::QuadPiP(bool active, int _x, int _y, int _w, int _h)
