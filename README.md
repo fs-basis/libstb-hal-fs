@@ -1,2 +1,2 @@
-libstb-hal
-==========
+libstb-hal-lcd4l
+================

@@ -13,18 +13,6 @@ libstb_hal_la_LIBADD = \
 
 # there has to be a better way to do this...
 
-if BOXTYPE_GENERIC
-if BOXMODEL_RASPI
-SUBDIRS += libraspi
-libstb_hal_la_LIBADD += \
-	libraspi/libraspi.la
-else
-SUBDIRS += libgeneric-pc
-libstb_hal_la_LIBADD += \
-	libgeneric-pc/libgeneric.la
-endif
-endif
-
 if BOXTYPE_SPARK
 #libstb_hal_test_LDADD += -lasound
 SUBDIRS += libspark libeplayer3-sh4
@@ -49,11 +37,9 @@ libstb_hal_la_LIBADD += \
 	libarmbox/libarmbox.la \
 	libdvbci/libdvbci.la
 
-if !ENABLE_GSTREAMER_10
 SUBDIRS += libeplayer3
 libstb_hal_la_LIBADD += \
 	libeplayer3/libeplayer3.la
-endif
 endif
 
 if BOXTYPE_MIPSBOX
@@ -73,7 +59,6 @@ pkginclude_HEADERS = \
 	include/ca_hal.h \
 	include/cs_types.h \
 	include/dmx_hal.h \
-	include/glfb.h \
 	include/hardware_caps.h \
 	include/init.h \
 	include/mmi.h \
