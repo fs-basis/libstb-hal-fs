@@ -1134,7 +1134,6 @@ void cVideo::SetControl(int control, int value)
 			const char *mode_zapping[] = { "mute", "hold"};
 //			const char *mode_zapping[] = { "mute", "hold", "mutetilllock", "holdtilllock"};
 			proc_put("/proc/stb/video/zapmode", mode_zapping[zapping_mode], strlen(mode_zapping[zapping_mode]));
-//		proc_put("/proc/stb/video/zapping_mode", mode_zapping[zapping_mode], strlen(mode_zapping[zapping_mode]));
 			break;
 	}
 	if (p)
