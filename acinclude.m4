@@ -36,11 +36,9 @@ if test "$TARGET" = "native"; then
 	if test "$prefix" = "NONE"; then
 		prefix=/usr/local
 	fi
-	TARGET_PREFIX=$prefix
-	if test "$exec_prefix" = "NONE"; then
-		exec_prefix=$prefix
-	fi
 	targetprefix=$prefix
+	TARGET_PREFIX=$prefix
+	AC_DEFINE_UNQUOTED(TARGET_PREFIX, "$TARGET_PREFIX", [The targets prefix])
 elif test "$TARGET" = "cdk"; then
 	AC_MSG_RESULT(cdk)
 
@@ -65,127 +63,26 @@ else
 	AC_MSG_ERROR([invalid target $TARGET, choose on from native,cdk]);
 fi
 
+if test "$exec_prefix" = "NONE"; then
+	exec_prefix=$prefix
+fi
+
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_SYS_LARGEFILE
 
 ])
 
-dnl expand nested ${foo}/bar
-AC_DEFUN([TUXBOX_EXPAND_VARIABLE], [
-	__$1="$2"
-	for __CNT in false false false false true; do dnl max 5 levels of indirection
-		$1=`eval echo "$__$1"`
-		echo ${$1} | grep -q '\$' || break # 'grep -q' is POSIX, exit if no $ in variable
-		__$1="${$1}"
-	done
-	$__CNT && AC_MSG_ERROR([can't expand variable $1=$2]) dnl bail out if we did not expand
-])
-
-AC_DEFUN([TUXBOX_APPS_DIRECTORY_ONE], [
-AC_ARG_WITH($1, AS_HELP_STRING([$6], [$7 [[PREFIX$4$5]]], [32], [79]), [
-	_$2=$withval
-	if test "$TARGET" = "cdk"; then
-		$2=`eval echo "$TARGET_PREFIX$withval"` # no indirection possible IMNSHO
-	else
-		$2=$withval
-	fi
-	TARGET_$2=${$2}
-], [
-	# RFC 1925: "you can always add another level of indirection..."
-	TUXBOX_EXPAND_VARIABLE($2,"${$3}$5")
-	if test "$TARGET" = "cdk"; then
-		TUXBOX_EXPAND_VARIABLE(_$2,"${target$3}$5")
-	else
-		_$2=${$2}
-	fi
-	TARGET_$2=$_$2
-])
-dnl AC_SUBST($2)
-AC_DEFINE_UNQUOTED($2,"$_$2",$7)
-AC_SUBST(TARGET_$2)
-])
-
-AC_DEFUN([TUXBOX_APPS_DIRECTORY], [
-AC_REQUIRE([TUXBOX_APPS])
-
-if test "$TARGET" = "cdk"; then
-	datadir="\${prefix}/share"
-	sysconfdir="\${prefix}/etc"
-	localstatedir="\${prefix}/var"
-	libdir="\${prefix}/lib"
-	targetdatadir="\${TARGET_PREFIX}/share"
-	targetsysconfdir="\${TARGET_PREFIX}/etc"
-	targetlocalstatedir="\${TARGET_PREFIX}/var"
-	targetlibdir="\${TARGET_PREFIX}/lib"
-fi
-
-TUXBOX_APPS_DIRECTORY_ONE(configdir, CONFIGDIR, localstatedir, /var, /tuxbox/config,
-	[--with-configdir=PATH], [where to find config files])
-
-TUXBOX_APPS_DIRECTORY_ONE(datadir, DATADIR, datadir, /share, /tuxbox,
-	[--with-datadir=PATH], [where to find data files])
-
-TUXBOX_APPS_DIRECTORY_ONE(fontdir, FONTDIR, datadir, /share, /fonts,
-	[--with-fontdir=PATH], [where to find fonts])
-
-TUXBOX_APPS_DIRECTORY_ONE(libdir, LIBDIR, libdir, /lib, /tuxbox,
-	[--with-libdir=PATH], [where to find internal libs])
-
-TUXBOX_APPS_DIRECTORY_ONE(plugindir, PLUGINDIR, localstatedir, /var, /tuxbox/plugins,
-	[--with-plugindir=PATH], [where to find plugins in /var])
-
-TUXBOX_APPS_DIRECTORY_ONE(themesdir, THEMESDIR, datadir, /share, /tuxbox/neutrino/themes,
-	[--with-themesdir=PATH], [where to find themes])
-])
-
-dnl automake <= 1.6 needs this specifications
-AC_SUBST(CONFIGDIR)
-AC_SUBST(DATADIR)
-AC_SUBST(FONTDIR)
-AC_SUBST(LIBDIR)
-AC_SUBST(PLUGINDIR)
-AC_SUBST(THEMESDIR)
-dnl end workaround
-
 AC_DEFUN([TUXBOX_BOXTYPE], [
 AC_ARG_WITH(boxtype,
-	AS_HELP_STRING([--with-boxtype], [valid values: spark, armbox, duckbox, spark7162]),
+	AS_HELP_STRING([--with-boxtype], [valid values: armbox, duckbox, spark, spark7162]),
 	[case "${withval}" in
-		spark|spark7162)
-			BOXTYPE="spark"
-			BOXMODEL="$withval"
-		;;
 		ufs*)
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
 		;;
-		atevio*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		fortis*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		octagon*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		hs7*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		cuberevo*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		ipbox*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		tf*)
-			BOXTYPE="duckbox"
+		spark|spark7162)
+			BOXTYPE="spark"
 			BOXMODEL="$withval"
 		;;
 		bre2ze4k|h7|hd51)
@@ -195,12 +92,12 @@ AC_ARG_WITH(boxtype,
 	esac])
 
 AC_ARG_WITH(boxmodel,
-	AS_HELP_STRING([--with-boxmodel], [valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, tf7700])
-AS_HELP_STRING([], [valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, tf7700])
+	AS_HELP_STRING([--with-boxmodel], [valid for duckbox: ufs910, ufs912, ufs913, ufs922])
+AS_HELP_STRING([], [valid for duckbox: ufs910, ufs912, ufs913, ufs922])
 AS_HELP_STRING([], [valid for spark: spark, spark7162])
 AS_HELP_STRING([], [valid for armbox: bre2ze4k, h7, hd51])
 	[case "${withval}" in
-		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|tf7700)
+		ufs910|ufs912|ufs913|ufs922)
 			if test "$BOXTYPE" = "duckbox"; then
 				BOXMODEL="$withval"
 			else
@@ -229,43 +126,31 @@ AS_HELP_STRING([], [valid for armbox: bre2ze4k, h7, hd51])
 AC_SUBST(BOXTYPE)
 AC_SUBST(BOXMODEL)
 
-AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
 AM_CONDITIONAL(BOXTYPE_DUCKBOX, test "$BOXTYPE" = "duckbox")
 AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "armbox")
+AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
 
 AM_CONDITIONAL(BOXMODEL_UFS910, test "$BOXMODEL" = "ufs910")
 AM_CONDITIONAL(BOXMODEL_UFS912, test "$BOXMODEL" = "ufs912")
 AM_CONDITIONAL(BOXMODEL_UFS913, test "$BOXMODEL" = "ufs913")
 AM_CONDITIONAL(BOXMODEL_UFS922, test "$BOXMODEL" = "ufs922")
+
 AM_CONDITIONAL(BOXMODEL_SPARK, test "$BOXMODEL" = "spark")
 AM_CONDITIONAL(BOXMODEL_SPARK7162, test "$BOXMODEL" = "spark7162")
-AM_CONDITIONAL(BOXMODEL_ATEVIO7500, test "$BOXMODEL" = "atevio7500")
-AM_CONDITIONAL(BOXMODEL_FORTIS_HDBOX, test "$BOXMODEL" = "fortis_hdbox")
-AM_CONDITIONAL(BOXMODEL_OCTAGON1008, test "$BOXMODEL" = "octagon1008")
-
-AM_CONDITIONAL(BOXMODEL_CUBEREVO, test "$BOXMODEL" = "cuberevo")
-AM_CONDITIONAL(BOXMODEL_CUBEREVO_MINI, test "$BOXMODEL" = "cuberevo_mini")
-AM_CONDITIONAL(BOXMODEL_CUBEREVO_MINI2, test "$BOXMODEL" = "cuberevo_mini2")
-AM_CONDITIONAL(BOXMODEL_CUBEREVO_250HD, test "$BOXMODEL" = "cuberevo_250hd")
-AM_CONDITIONAL(BOXMODEL_CUBEREVO_2000HD, test "$BOXMODEL" = "cuberevo_2000hd")
-AM_CONDITIONAL(BOXMODEL_CUBEREVO_3000HD, test "$BOXMODEL" = "cuberevo_3000hd")
-AM_CONDITIONAL(BOXMODEL_IPBOX9900, test "$BOXMODEL" = "ipbox9900")
-AM_CONDITIONAL(BOXMODEL_IPBOX99, test "$BOXMODEL" = "ipbox99")
-AM_CONDITIONAL(BOXMODEL_IPBOX55, test "$BOXMODEL" = "ipbox55")
-AM_CONDITIONAL(BOXMODEL_TF7700, test "$BOXMODEL" = "tf7700")
 
 AM_CONDITIONAL(BOXMODEL_BRE2ZE4K, test "$BOXMODEL" = "bre2ze4k")
 AM_CONDITIONAL(BOXMODEL_H7, test "$BOXMODEL" = "h7")
 AM_CONDITIONAL(BOXMODEL_HD51, test "$BOXMODEL" = "hd51")
 
-if test "$BOXTYPE" = "spark"; then
-	AC_DEFINE(HAVE_SPARK_HARDWARE, 1, [building for a goldenmedia 990 or edision pingulux])
-	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
+if test "$BOXTYPE" = "armbox"; then
+	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an armbox])
 elif test "$BOXTYPE" = "duckbox"; then
 	AC_DEFINE(HAVE_DUCKBOX_HARDWARE, 1, [building for a duckbox])
 	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
-elif test "$BOXTYPE" = "armbox"; then
-	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an armbox])
+elif test "$BOXTYPE" = "spark"; then
+	AC_DEFINE(HAVE_SPARK_HARDWARE, 1, [building for a goldenmedia 990 or edision pingulux])
+	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
+
 fi
 
 # TODO: do we need more defines?
@@ -281,32 +166,6 @@ elif test "$BOXMODEL" = "spark"; then
 	AC_DEFINE(BOXMODEL_SPARK, 1, [spark])
 elif test "$BOXMODEL" = "spark7162"; then
 	AC_DEFINE(BOXMODEL_SPARK7162, 1, [spark7162])
-elif test "$BOXMODEL" = "atevio7500"; then
-	AC_DEFINE(BOXMODEL_ATEVIO7500, 1, [atevio7500])
-elif test "$BOXMODEL" = "fortis_hdbox"; then
-	AC_DEFINE(BOXMODEL_FORTIS_HDBOX, 1, [fortis_hdbox])
-elif test "$BOXMODEL" = "octagon1008"; then
-	AC_DEFINE(BOXMODEL_OCTAGON1008, 1, [octagon1008])
-elif test "$BOXMODEL" = "cuberevo"; then
-	AC_DEFINE(BOXMODEL_CUBEREVO, 1, [cuberevo])
-elif test "$BOXMODEL" = "cuberevo_mini"; then
-	AC_DEFINE(BOXMODEL_CUBEREVO_MINI, 1, [cuberevo_mini])
-elif test "$BOXMODEL" = "cuberevo_mini2"; then
-	AC_DEFINE(BOXMODEL_CUBEREVO_MINI2, 1, [cuberevo_mini2])
-elif test "$BOXMODEL" = "cuberevo_250hd"; then
-	AC_DEFINE(BOXMODEL_CUBEREVO_250HD, 1, [cuberevo_250hd])
-elif test "$BOXMODEL" = "cuberevo_2000hd"; then
-	AC_DEFINE(BOXMODEL_CUBEREVO_2000HD, 1, [cuberevo_2000hd])
-elif test "$BOXMODEL" = "cuberevo_3000hd"; then
-	AC_DEFINE(BOXMODEL_CUBEREVO_3000HD, 1, [cuberevo_3000hd])
-elif test "$BOXMODEL" = "ipbox9900"; then
-	AC_DEFINE(BOXMODEL_IPBOX9900, 1, [ipbox9900])
-elif test "$BOXMODEL" = "ipbox99"; then
-	AC_DEFINE(BOXMODEL_IPBOX99, 1, [ipbox99])
-elif test "$BOXMODEL" = "ipbox55"; then
-	AC_DEFINE(BOXMODEL_IPBOX55, 1, [ipbox55])
-elif test "$BOXMODEL" = "tf7700"; then
-	AC_DEFINE(BOXMODEL_TF7700, 1, [tf7700])
 elif test "$BOXMODEL" = "bre2ze4k"; then
 	AC_DEFINE(BOXMODEL_BRE2ZE4K, 1, [bre2ze4k])
 elif test "$BOXMODEL" = "h7"; then
