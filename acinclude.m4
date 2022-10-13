@@ -127,8 +127,8 @@ AC_SUBST(BOXTYPE)
 AC_SUBST(BOXMODEL)
 
 AM_CONDITIONAL(BOXTYPE_DUCKBOX, test "$BOXTYPE" = "duckbox")
-AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "armbox")
 AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
+AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "armbox")
 
 AM_CONDITIONAL(BOXMODEL_UFS910, test "$BOXMODEL" = "ufs910")
 AM_CONDITIONAL(BOXMODEL_UFS912, test "$BOXMODEL" = "ufs912")
@@ -142,15 +142,14 @@ AM_CONDITIONAL(BOXMODEL_BRE2ZE4K, test "$BOXMODEL" = "bre2ze4k")
 AM_CONDITIONAL(BOXMODEL_H7, test "$BOXMODEL" = "h7")
 AM_CONDITIONAL(BOXMODEL_HD51, test "$BOXMODEL" = "hd51")
 
-if test "$BOXTYPE" = "armbox"; then
-	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an armbox])
-elif test "$BOXTYPE" = "duckbox"; then
+if test "$BOXTYPE" = "duckbox"; then
 	AC_DEFINE(HAVE_DUCKBOX_HARDWARE, 1, [building for a duckbox])
 	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
 elif test "$BOXTYPE" = "spark"; then
 	AC_DEFINE(HAVE_SPARK_HARDWARE, 1, [building for a goldenmedia 990 or edision pingulux])
 	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
-
+elif test "$BOXTYPE" = "armbox"; then
+	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an armbox])
 fi
 
 # TODO: do we need more defines?
