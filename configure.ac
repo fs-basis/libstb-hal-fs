@@ -57,6 +57,5 @@ libduckbox/Makefile
 libdvbci/Makefile
 libeplayer3/Makefile
 libeplayer3-sh4/Makefile
-libspark/Makefile
 tools/Makefile
 ])
