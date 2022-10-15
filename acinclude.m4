@@ -75,14 +75,10 @@ AC_SYS_LARGEFILE
 
 AC_DEFUN([TUXBOX_BOXTYPE], [
 AC_ARG_WITH(boxtype,
-	AS_HELP_STRING([--with-boxtype], [valid values: armbox, duckbox, spark, spark7162]),
+	AS_HELP_STRING([--with-boxtype], [valid values: armbox, duckbox]),
 	[case "${withval}" in
 		ufs*)
 			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-		;;
-		spark|spark7162)
-			BOXTYPE="spark"
 			BOXMODEL="$withval"
 		;;
 		bre2ze4k|h7|hd51)
@@ -94,18 +90,10 @@ AC_ARG_WITH(boxtype,
 AC_ARG_WITH(boxmodel,
 	AS_HELP_STRING([--with-boxmodel], [valid for duckbox: ufs910, ufs912, ufs913, ufs922])
 AS_HELP_STRING([], [valid for duckbox: ufs910, ufs912, ufs913, ufs922])
-AS_HELP_STRING([], [valid for spark: spark, spark7162])
 AS_HELP_STRING([], [valid for armbox: bre2ze4k, h7, hd51])
 	[case "${withval}" in
 		ufs910|ufs912|ufs913|ufs922)
 			if test "$BOXTYPE" = "duckbox"; then
-				BOXMODEL="$withval"
-			else
-				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
-			fi
-		;;
-		spark|spark7162)
-			if test "$BOXTYPE" = "spark"; then
 				BOXMODEL="$withval"
 			else
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
@@ -127,7 +115,6 @@ AC_SUBST(BOXTYPE)
 AC_SUBST(BOXMODEL)
 
 AM_CONDITIONAL(BOXTYPE_DUCKBOX, test "$BOXTYPE" = "duckbox")
-AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
 AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "armbox")
 
 AM_CONDITIONAL(BOXMODEL_UFS910, test "$BOXMODEL" = "ufs910")
@@ -135,18 +122,12 @@ AM_CONDITIONAL(BOXMODEL_UFS912, test "$BOXMODEL" = "ufs912")
 AM_CONDITIONAL(BOXMODEL_UFS913, test "$BOXMODEL" = "ufs913")
 AM_CONDITIONAL(BOXMODEL_UFS922, test "$BOXMODEL" = "ufs922")
 
-AM_CONDITIONAL(BOXMODEL_SPARK, test "$BOXMODEL" = "spark")
-AM_CONDITIONAL(BOXMODEL_SPARK7162, test "$BOXMODEL" = "spark7162")
-
 AM_CONDITIONAL(BOXMODEL_BRE2ZE4K, test "$BOXMODEL" = "bre2ze4k")
 AM_CONDITIONAL(BOXMODEL_H7, test "$BOXMODEL" = "h7")
 AM_CONDITIONAL(BOXMODEL_HD51, test "$BOXMODEL" = "hd51")
 
 if test "$BOXTYPE" = "duckbox"; then
 	AC_DEFINE(HAVE_DUCKBOX_HARDWARE, 1, [building for a duckbox])
-	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
-elif test "$BOXTYPE" = "spark"; then
-	AC_DEFINE(HAVE_SPARK_HARDWARE, 1, [building for a goldenmedia 990 or edision pingulux])
 	AC_DEFINE(HAVE_SH4_HARDWARE, 1, [building for a sh4 box])
 elif test "$BOXTYPE" = "armbox"; then
 	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an armbox])
@@ -161,10 +142,6 @@ elif test "$BOXMODEL" = "ufs913"; then
 	AC_DEFINE(BOXMODEL_UFS913, 1, [ufs913])
 elif test "$BOXMODEL" = "ufs922"; then
 	AC_DEFINE(BOXMODEL_UFS922, 1, [ufs922])
-elif test "$BOXMODEL" = "spark"; then
-	AC_DEFINE(BOXMODEL_SPARK, 1, [spark])
-elif test "$BOXMODEL" = "spark7162"; then
-	AC_DEFINE(BOXMODEL_SPARK7162, 1, [spark7162])
 elif test "$BOXMODEL" = "bre2ze4k"; then
 	AC_DEFINE(BOXMODEL_BRE2ZE4K, 1, [bre2ze4k])
 elif test "$BOXMODEL" = "h7"; then
