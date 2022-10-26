@@ -937,22 +937,16 @@ static inline int rate2csapi(int rate)
 {
 	switch (rate)
 	{
-		case 23976:
-			return 0;
 		case 24000:
-			return 1;
+			return 0;
 		case 25000:
-			return 2;
-		case 29970:
-			return 3;
+			return 1;
 		case 30000:
-			return 4;
+			return 2;
 		case 50000:
-			return 5;
-		case 59940:
-			return 6;
+			return 3;
 		case 60000:
-			return 7;
+			return 4;
 		default:
 			break;
 	}

@@ -186,10 +186,8 @@ static const char *vid_modes[] =
 	"1080i25",  // VIDEO_STD_1080I25
 	"1080i50",  // VIDEO_STD_1080I50
 	"1080i60",  // VIDEO_STD_1080I60
-	"1080p2397",    // VIDEO_STD_1080P2397
 	"1080p24",  // VIDEO_STD_1080P24
 	"1080p25",  // VIDEO_STD_1080P25
-	"1080p2997",    // VIDEO_STD_1080P2997
 	"1080p30",  // VIDEO_STD_1080P30
 	"1080p50",  // VIDEO_STD_1080P50
 	"1080p60",  // VIDEO_STD_1080P60
@@ -951,22 +949,16 @@ static inline int rate2csapi(int rate)
 {
 	switch (rate)
 	{
-		case 23976:
-			return 0;
 		case 24000:
-			return 1;
+			return 0;
 		case 25000:
-			return 2;
-		case 29970:
-			return 3;
+			return 1;
 		case 30000:
-			return 4;
+			return 2;
 		case 50000:
-			return 5;
-		case 59940:
-			return 6;
+			return 3;
 		case 60000:
-			return 7;
+			return 4;
 		default:
 			break;
 	}
