@@ -181,7 +181,7 @@ elif test "$BOXMODEL" = "h7"; then
 elif test "$BOXMODEL" = "hd51"; then
 	AC_DEFINE(BOXMODEL_HD51, 1, [hd51])
 elif test "$BOXMODEL" = "e4hdultra"; then
-	AC_DEFINE(BOXMODEL_E4HDUKTRA, 1, [e4hdultra])
+	AC_DEFINE(BOXMODEL_E4HDULTRA, 1, [e4hdultra])
 elif test "$BOXMODEL" = "vusolo4k"; then
 	AC_DEFINE(BOXMODEL_VUSOLO4K, 1, [vusolo4k])
 elif test "$BOXMODEL" = "vuduo4k"; then
