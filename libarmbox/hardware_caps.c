@@ -213,7 +213,7 @@ hw_caps_t *get_hwcaps(void)
 	strcpy(caps.boxname, "Zgemma H7");
 	strcpy(caps.boxarch, "BCM7251S");
 #endif
-#if BOXMODEL_E4HD
+#if BOXMODEL_E4HDULTRA
 	initialized = 1;
 	caps.has_CI = 1;
 	caps.can_cec = 1;
