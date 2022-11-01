@@ -721,15 +721,6 @@ static int check_ci_certificates(struct cc_ctrl_data *cc_data)
 	if (!element_valid(cc_data, 16))
 		return -1;
 
-#if 0
-	{
-		/* write ci device cert to disk */
-		int fd = open("ci_cert.der", O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-		write(fd, element_get_ptr(cc_data, 16), element_get_buf(cc_data, NULL, 16));
-		close(fd);
-	}
-#endif
-
 	/* import CICAM_BrandCert */
 	if ((ctx->ci_cust_cert = import_ci_certificates(cc_data, 8)) == NULL)
 	{
@@ -1432,7 +1423,7 @@ void eDVBCIContentControlManagerSession::resendKey(eDVBCISlot *tslot)
 
 	if (!tslot->SidBlackListed && (tslot->recordUse[0] || tslot->liveUse[0]))
 	{
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		if (slot->newPids)
 		{
 			if (slot->pids.size())

@@ -266,11 +266,6 @@ bool cDemux::Stop(void)
 
 int cDemux::Read(unsigned char *buff, int len, int timeout)
 {
-#if 0
-	if (len != 4095 && timeout != 10)
-		fprintf(stderr, "cDemux::%s #%d fd: %d type: %s len: %d timeout: %d\n",
-		    __FUNCTION__, num, fd, DMX_T[dmx_type], len, timeout);
-#endif
 	if (fd < 0)
 	{
 		hal_info("%s #%d: not open!\n", __func__, num);
@@ -319,14 +314,6 @@ retry:
 				goto retry;
 			return -1;
 		}
-#if 0
-		if (ufds.revents & POLLERR) /* POLLERR means buffer error, i.e. buffer overflow */
-		{
-			dmx_err("received %s,", "POLLERR", ufds.revents);
-			/* this seems to happen sometimes at recording start, without bad effects */
-			return 0;
-		}
-#endif
 		if (ufds.revents & POLLHUP) /* we get POLLHUP if e.g. a too big DMX_BUFFER_SIZE was set */
 		{
 			dmx_err("received %s,", "POLLHUP", ufds.revents);

@@ -136,11 +136,6 @@ bool WriterH264::Write(AVPacket *packet, int64_t pts)
 		Header[len++] = CONTAINER_PARAMETERS_VERSION;
 		Header[len++] = 0xff;   // marker bits
 
-#if 0
-		if (FrameRate == 0xffffffff)
-			FrameRate = (TimeScale > 1000) ? 1001 : 1;
-#endif
-
 		Header[len++] = (TimeScale >> 24) & 0xff;   // Output the timescale
 		Header[len++] = (TimeScale >> 16) & 0xff;
 		Header[len++] = 0xff;   // marker bits

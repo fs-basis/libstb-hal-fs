@@ -78,20 +78,6 @@ class cPlayback
 
 		AVFormatContext *GetAVFormatContext();
 		void ReleaseAVFormatContext();
-#if 0
-		void FindAllSubs(uint16_t *pids, unsigned short *supported, uint16_t *numpida, std::string *language);
-		bool SelectSubtitles(int pid);
-
-		// Functions that are not used by movieplayer.cpp:
-		bool GetOffset(off64_t &offset);
-		bool IsPlaying(void) const;
-		bool IsEnabled(void) const;
-		void *GetHandle(void);
-		void *GetDmHandle(void);
-		int GetCurrPlaybackSpeed(void) const;
-		void PlaybackNotify(int  Event, void *pData, void *pTag);
-		void DMNotify(int Event, void *pTsBuf, void *Tag);
-#endif
 };
 
 #endif // __PLAYBACK_LIBEPLAYER3_H__

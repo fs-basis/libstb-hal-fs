@@ -3,8 +3,6 @@
 #include "../libduckbox/playback_libeplayer3.h"
 #elif HAVE_ARM_HARDWARE
 #include "../libarmbox/playback_libeplayer3.h"
-#elif HAVE_MIPS_HARDWARE
-#include "../libmipsbox/playback_libeplayer3.h"
 #else
 #error no valid hardware defined
 #endif

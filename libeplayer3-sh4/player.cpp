@@ -310,15 +310,6 @@ bool Player::FastBackward(int speed)
 		}
 
 		output.Clear();
-#if 0
-		if (output->Command(player, OUTPUT_REVERSE, NULL) < 0)
-		{
-			fprintf(stderr, "OUTPUT_REVERSE failed\n");
-			isBackWard = false;
-			Speed = 1;
-			ret = false;
-		}
-#endif
 	}
 	else
 	{

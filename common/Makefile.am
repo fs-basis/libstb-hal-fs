@@ -17,15 +17,6 @@ AM_CXXFLAGS += \
 	-I $(top_srcdir)/libdvbci
 endif
 
-if BOXTYPE_MIPSBOX
-AM_CXXFLAGS += \
-	-I $(top_srcdir)/libdvbci
-endif
-
-if BOXTYPE_MIPSBOX
-libcommon_la_SOURCES = \
-	ca_ci.cpp
-else
 if BOXTYPE_DUCKBOX
 libcommon_la_SOURCES = \
 	ca_ci.cpp
@@ -36,7 +27,6 @@ libcommon_la_SOURCES = \
 else
 libcommon_la_SOURCES = \
 	ca.cpp
-endif
 endif
 endif
 

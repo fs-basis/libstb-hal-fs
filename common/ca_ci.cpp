@@ -40,7 +40,7 @@ static const char *FILENAME = "[ca_ci]";
 const char ci_path[] = "/dev/dvb/adapter0/ci%d";
 ca_slot_info_t info;
 #endif
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 const char ci_path[] = "/dev/ci%d";
 static int last_source = -1;
 #endif
@@ -56,7 +56,7 @@ static cCA *pcCAInstance = NULL;
 /* nur diese Message wird vom CI aus neutrinoMessages.h benutzt */
 /* für den CamMsgHandler, darum hier einfach mal definiert */
 /* die Feinheiten werden ja in CA_MESSAGE verpackt */
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 uintptr_t EVT_CA_MESSAGE = 0x80000000 + 60;
 #else
 uint32_t EVT_CA_MESSAGE = 0x80000000 + 60;
@@ -238,36 +238,19 @@ static bool transmitData(eDVBCISlot *slot, unsigned char *d, int len)
 {
 	printf("%s -> %s len(%d)\n", FILENAME, __func__, len);
 
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUZERO4K
-#if y_debug
-	for (int i = 0; i < len; i++)
-		printf("%02x ", d[i]);
-	printf("\n");
-#endif
-	int res = write(slot->fd, d, len);
-	printf("send: %d len: %d\n", res, len);
-
-	free(d);
-	if (res < 0 || res != len)
-	{
-		printf("error writing data to fd %d, slot %d: %m\n", slot->fd, slot->slot);
-		return false;
-	}
-#else
 #if y_debug
 	for (int i = 0; i < len; i++)
 		printf("%02x ", d[i]);
 	printf("\n");
 #endif
 	slot->sendqueue.push(queueData(d, len));
-#endif
 	return true;
 }
 
 //send some data on an fd, for a special slot and connection_id
 eData sendData(eDVBCISlot *slot, unsigned char *data, int len)
 {
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 	unsigned char *d = (unsigned char *) malloc(len);
 	memcpy(d, data, len);
 	transmitData(slot, d, len);
@@ -486,7 +469,7 @@ bool cCA::SendMessage(const CA_MESSAGE *msg)
 {
 	hal_debug("%s\n", __func__);
 	if (cam_messenger)
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		cam_messenger(EVT_CA_MESSAGE, (uintptr_t) msg);
 #else
 		cam_messenger(EVT_CA_MESSAGE, (uint32_t) msg);
@@ -510,17 +493,6 @@ void cCA::MenuEnter(enum CA_SLOT_TYPE, uint32_t bSlotIndex)
 
 	for (it = slot_data.begin(); it != slot_data.end(); ++it)
 	{
-#if 0
-		if ((strstr((*it)->name, "unknown module") != NULL) && ((*it)->slot == bSlotIndex))
-		{
-			//the module has no real name, this is the matter if something while initializing went wrong
-			//so let this take as a reset action for the module so we do not need to add a reset
-			//feature to the neutrino menu
-			ModuleReset(SlotType, bSlotIndex);
-
-			return;
-		}
-#endif
 		if ((*it)->slot == bSlotIndex)
 		{
 			if ((*it)->hasAppManager)
@@ -902,7 +874,7 @@ bool cCA::SendCAPMT(u64 tpid, u8 source, u8 camask, const unsigned char *cabuf, 
 			(*It)->SID[0] = SID;
 			(*It)->ci_use_count = 1;
 			(*It)->TP = TP;
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 			if (!checkLiveSlot && mode && (*It)->source != source)
 				setInputSource((eDVBCISlot *)(*It), false);
 #endif
@@ -913,7 +885,7 @@ bool cCA::SendCAPMT(u64 tpid, u8 source, u8 camask, const unsigned char *cabuf, 
 			(*It)->newCapmt = true;
 		}
 
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		if ((*It)->newCapmt)
 			extractPids((eDVBCISlot *)(*It));
 #endif
@@ -941,7 +913,7 @@ bool cCA::SendCAPMT(u64 tpid, u8 source, u8 camask, const unsigned char *cabuf, 
 	}
 	else
 	{
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		std::list<eDVBCISlot *>::iterator it;
 		recordUse_found = false;
 		for (it = slot_data.begin(); it != slot_data.end(); ++it)
@@ -982,7 +954,7 @@ bool cCA::SendCAPMT(u64 tpid, u8 source, u8 camask, const unsigned char *cabuf, 
 	return true;
 }
 
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 void cCA::extractPids(eDVBCISlot *slot)
 {
 	u32 prg_info_len;
@@ -1042,76 +1014,12 @@ void cCA::setSource(eDVBCISlot *slot)
 			case TUNER_D:
 				fprintf(ci, "D");
 				break;
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K
-			case TUNER_E:
-				fprintf(ci, "E");
-				break;
-			case TUNER_F:
-				fprintf(ci, "F");
-				break;
-			case TUNER_G:
-				fprintf(ci, "G");
-				break;
-			case TUNER_H:
-				fprintf(ci, "H");
-				break;
-			case TUNER_I:
-				fprintf(ci, "I");
-				break;
-			case TUNER_J:
-				fprintf(ci, "J");
-				break;
-			case TUNER_K:
-				fprintf(ci, "K");
-				break;
-			case TUNER_L:
-				fprintf(ci, "L");
-				break;
-			case TUNER_M:
-				fprintf(ci, "M");
-				break;
-			case TUNER_N:
-				fprintf(ci, "N");
-				break;
-			case TUNER_O:
-				fprintf(ci, "O");
-				break;
-			case TUNER_P:
-				fprintf(ci, "P");
-				break;
-#if BOXMODEL_VUULTIMO4K
-			case TUNER_Q:
-				fprintf(ci, "Q");
-				break;
-			case TUNER_R:
-				fprintf(ci, "R");
-				break;
-			case TUNER_S:
-				fprintf(ci, "S");
-				break;
-			case TUNER_T:
-				fprintf(ci, "T");
-				break;
-			case TUNER_U:
-				fprintf(ci, "U");
-				break;
-			case TUNER_V:
-				fprintf(ci, "V");
-				break;
-			case TUNER_W:
-				fprintf(ci, "W");
-				break;
-			case TUNER_X:
-				fprintf(ci, "X");
-				break;
-#endif
-#endif
 		}
 		fclose(ci);
 	}
 }
 
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 static std::string getTunerLetter(int number)
 {
 	return std::string(1, char(65 + number));
@@ -1123,15 +1031,7 @@ void cCA::setInputs()
 	char choices[64];
 	FILE *fd = 0;
 
-#if BOXMODEL_VUULTIMO4K
-	for (int number = 0; number < 24; number++) // tuner A to X, input 0 to 23
-#else
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-	for (int number = 0; number < 16; number++) // tuner A to P, input 0 to 15
-#else
 	for (int number = 0; number < 4; number++) // tuner A to D, input 0 to 3
-#endif
-#endif
 	{
 		snprintf(choices, 64, "/proc/stb/tsmux/input%d_choices", number);
 		if (access(choices, R_OK) < 0)
@@ -1192,70 +1092,6 @@ void cCA::setInputSource(eDVBCISlot *slot, bool ci)
 				case TUNER_D:
 					fprintf(input, "D");
 					break;
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-				case TUNER_E:
-					fprintf(input, "E");
-					break;
-				case TUNER_F:
-					fprintf(input, "F");
-					break;
-				case TUNER_G:
-					fprintf(input, "G");
-					break;
-				case TUNER_H:
-					fprintf(input, "H");
-					break;
-				case TUNER_I:
-					fprintf(input, "I");
-					break;
-				case TUNER_J:
-					fprintf(input, "J");
-					break;
-				case TUNER_K:
-					fprintf(input, "K");
-					break;
-				case TUNER_L:
-					fprintf(input, "L");
-					break;
-				case TUNER_M:
-					fprintf(input, "M");
-					break;
-				case TUNER_N:
-					fprintf(input, "N");
-					break;
-				case TUNER_O:
-					fprintf(input, "O");
-					break;
-				case TUNER_P:
-					fprintf(input, "P");
-					break;
-#if BOXMODEL_VUULTIMO4K
-				case TUNER_Q:
-					fprintf(input, "Q");
-					break;
-				case TUNER_R:
-					fprintf(input, "R");
-					break;
-				case TUNER_S:
-					fprintf(input, "S");
-					break;
-				case TUNER_T:
-					fprintf(input, "T");
-					break;
-				case TUNER_U:
-					fprintf(input, "U");
-					break;
-				case TUNER_V:
-					fprintf(input, "V");
-					break;
-				case TUNER_W:
-					fprintf(input, "W");
-					break;
-				case TUNER_X:
-					fprintf(input, "X");
-					break;
-#endif
-#endif
 			}
 		}
 		fclose(input);
@@ -1268,7 +1104,7 @@ cCA::cCA(int Slots)
 	printf("%s -> %s %d\n", FILENAME, __func__, Slots);
 
 	num_slots = Slots;
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 	setInputs();
 #endif
 
@@ -1364,7 +1200,7 @@ void cCA::ModuleReset(enum CA_SLOT_TYPE, uint32_t slot)
 	{
 		(*it)->status = eStatusReset;
 		usleep(200000);
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		last_source = (int)(*it)->source;
 		setInputSource((eDVBCISlot *)(*it), false);
 #endif
@@ -1457,7 +1293,7 @@ void cCA::ci_inserted(eDVBCISlot *slot)
 void cCA::ci_removed(eDVBCISlot *slot)
 {
 	printf("cam (%d) status changed ->cam now _not_ present\n", slot->slot);
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 	last_source = (int)slot->source;
 	setInputSource(slot, false);
 #endif
@@ -1528,7 +1364,7 @@ void cCA::slot_pollthread(void *c)
 
 	while (1)
 	{
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE /* Armbox/Mipsbox */
+#if HAVE_ARM_HARDWARE
 
 		int len = 1024 * 4;
 		eData status;
@@ -1771,7 +1607,7 @@ FROM_FIRST:
 				break;
 		} /* switch(slot->status) */
 #endif      /* end Duckbox */
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		if (!slot->init && slot->camIsReady && last_source > -1)
 		{
 			slot->source = (u8)last_source;
@@ -1826,7 +1662,7 @@ bool cCA::SendCaPMT(eDVBCISlot *slot)
 	printf("%s -> %s\n", FILENAME, __func__);
 	if (slot->fd > 0)
 	{
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 		setInputSource(slot, true);
 #endif
 		setSource(slot);
@@ -1958,31 +1794,3 @@ void cCA::SetTSClock(u32 Speed, int slot)
 		fclose(ci);
 	}
 }
-
-#if BOXMODEL_VUPLUS_ALL
-void cCA::SetCIDelay(int Delay)
-{
-	char buf[64];
-	snprintf(buf, 64, "/proc/stb/tsmux/rmx_delay");
-	FILE *ci = fopen(buf, "wb");
-	printf("%s -> %s to: %i\n", FILENAME, __func__, Delay);
-	if (ci)
-	{
-		fprintf(ci, "%i", Delay);
-		fclose(ci);
-	}
-}
-
-void cCA::SetCIRelevantPidsRouting(int RPR, int slot)
-{
-	char buf[64];
-	snprintf(buf, 64, "/proc/stb/tsmux/ci%d_relevant_pids_routing", slot);
-	FILE *ci = fopen(buf, "wb");
-	printf("%s -> %s to: %i\n", FILENAME, __func__, RPR);
-	if (ci)
-	{
-		fprintf(ci, "%s", RPR == 1 ? "yes" : "no");
-		fclose(ci);
-	}
-}
-#endif

@@ -27,7 +27,6 @@ class cAudio
 		friend class cPlayback;
 	private:
 		int fd;
-		bool fdd;
 		unsigned int devnum;
 		bool Muted;
 
@@ -48,14 +47,8 @@ class cAudio
 		cAudio(void *, void *, void *, unsigned int unit = 0);
 		~cAudio(void);
 
-		/* used internally by playback */
 		void openDevice(void);
 		void closeDevice(void);
-
-		void open_AVInput_Device(void);
-		void close_AVInput_Device(void);
-
-		void setAVInput(int val);
 
 		void *GetHandle()
 		{

@@ -294,10 +294,6 @@ void eDVBCISession::receiveData(eDVBCISlot *slot, const unsigned char *ptr, size
 
 	printf("[CI SESS] receiveData slot: %p > ", slot);
 
-#if 0
-	for (unsigned int i = 0; i < len; i++)
-		printf("%02x ", ptr[i]);
-#endif
 	printf("\n");
 
 	llen = parseLengthField(pkt, hlen);

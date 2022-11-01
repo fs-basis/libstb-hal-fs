@@ -104,7 +104,7 @@ typedef struct CA_MESSAGE
 
 typedef void (*hal_messenger)(unsigned int msg, unsigned int data);
 
-#if HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE
 void hal_register_messenger(hal_messenger messenger);
 #else
 static inline void hal_register_messenger(hal_messenger)
@@ -141,30 +141,6 @@ typedef enum
 	TUNER_B,
 	TUNER_C,
 	TUNER_D
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-	, TUNER_E
-	, TUNER_F
-	, TUNER_G
-	, TUNER_H
-	, TUNER_I
-	, TUNER_J
-	, TUNER_K
-	, TUNER_L
-	, TUNER_M
-	, TUNER_N
-	, TUNER_O
-	, TUNER_P
-#if BOXMODEL_VUULTIMO4K
-	, TUNER_Q
-	, TUNER_R
-	, TUNER_S
-	, TUNER_T
-	, TUNER_U
-	, TUNER_V
-	, TUNER_W
-	, TUNER_X
-#endif
-#endif
 } source_t;
 
 typedef enum
@@ -340,14 +316,6 @@ class cCA
 		/// Sets the frequency (in Hz) of the TS stream input (only valid for CI)
 		/// sh4 unused
 		void SetTSClock(u32 Speed, int slot = 0);
-
-#if BOXMODEL_VUPLUS_ALL
-		/// dvb wait delay for ci response
-		void SetCIDelay(int Delay);
-		/// relevant pids routing
-		void SetCIRelevantPidsRouting(int RPR, int slot = 0);
-#endif
-
 		/// Start the CA module
 		/// sh4 unused
 		bool Start(void);

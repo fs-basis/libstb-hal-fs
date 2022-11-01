@@ -1996,13 +1996,6 @@ int32_t container_ffmpeg_update_tracks(Context_t *context, char *filename, int32
 		context->manager->audio->Command(context, MANAGER_INIT_UPDATE, NULL);
 	}
 
-#if 0
-	if (context->manager->subtitle)
-	{
-		context->manager->subtitle->Command(context, MANAGER_INIT_UPDATE, NULL);
-	}
-#endif
-
 	ffmpeg_printf(20, "dump format\n");
 	if ((avContextTab[0] != NULL) && (FFMPEG_DEBUG_LEVEL > 0))
 		av_dump_format(avContextTab[0], 0, filename, 0);

@@ -10,14 +10,6 @@ typedef struct cs_vs_format_t
 	char format[16];
 } cs_vs_format_struct_t;
 
-#if BOXMODEL_VUPLUS_ARM
-typedef enum
-{
-	HDMI_COLORIMETRY_AUTO,
-	HDMI_COLORIMETRY_BT709,
-	HDMI_COLORIMETRY_BT470
-} HDMI_COLORIMETRY;
-#else
 typedef enum
 {
 	HDMI_COLORIMETRY_AUTO,
@@ -25,7 +17,6 @@ typedef enum
 	HDMI_COLORIMETRY_BT2020CL,
 	HDMI_COLORIMETRY_BT709
 } HDMI_COLORIMETRY;
-#endif
 
 typedef enum
 {
@@ -141,7 +132,6 @@ class cVideo
 	private:
 		/* video device */
 		int fd;
-		bool fdd;
 		unsigned int devnum;
 		/* apparently we cannot query the driver's state
 		   => remember it */
@@ -181,11 +171,6 @@ class cVideo
 		/* used internally by playback */
 		void openDevice(void);
 		void closeDevice(void);
-
-		void open_AVInput_Device(void);
-		void close_AVInput_Device(void);
-
-		void setAVInput(int val);
 
 		void *GetTVEnc()
 		{
@@ -237,7 +222,6 @@ class cVideo
 		void Pig(int x, int y, int w, int h, int osd_w = 1064, int osd_h = 600, int startx = 0, int starty = 0, int endx = 1279, int endy = 719);
 		void SetControl(int, int);
 		void setContrast(int val);
-		void QuadPiP(bool active = false, int _x = 0, int _y = 0, int _w = 360, int _h = 288);
 
 		void SetAudioHandle(void *)
 		{

@@ -74,12 +74,6 @@ extern "C"
 #define VIDEO_GET_FRAME_RATE       _IOR('o', 56, unsigned int)
 #endif
 
-enum
-{
-	ENCODER,
-	AUX
-};
-
 cVideo *videoDecoder = NULL;
 cVideo *pipVideoDecoder[3] = { NULL, NULL, NULL };
 
@@ -450,63 +444,6 @@ int image_to_mpeg2(const char *image_name, int fd)
 	return ret;
 }
 
-#ifndef VIDEO_SOURCE_HDMI
-#define VIDEO_SOURCE_HDMI 2
-#endif
-
-void cVideo::open_AVInput_Device(void)
-{
-	hal_debug("%s\n", __func__);
-
-	if (fdd) /* already open */
-		return;
-
-	fop(ioctl, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_HDMI);
-	fop(ioctl, VIDEO_PLAY);
-	fdd = true;
-}
-
-void cVideo::close_AVInput_Device(void)
-{
-	hal_debug("%s\n", __func__);
-
-	if (fdd)
-	{
-		fop(ioctl, VIDEO_STOP);
-		fop(ioctl, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_DEMUX);
-	}
-	fdd = false;
-}
-
-void cVideo::setAVInput(int val)
-{
-	hal_info("%s - switching to: %s\n", __func__, val == AUX ? "AUX" : "ENCODER");
-
-	if (val == AUX)
-	{
-		setBlank(1);
-		open_AVInput_Device();
-	}
-	else
-	{
-		if (fdd)
-		{
-			close_AVInput_Device();
-			setBlank(0);
-		}
-	}
-
-#if 0 // not working
-	int input_fd = open("/proc/stb/avs/0/input", O_WRONLY);
-	if (input_fd)
-	{
-		const char *input[] = {"encoder", "aux"};
-		write(input_fd, input[val], strlen(input[val]));
-		close(input_fd);
-	}
-#endif
-}
-
 cVideo::cVideo(int, void *, void *, unsigned int unit)
 {
 	hal_debug("%s unit %u\n", __func__, unit);
@@ -525,19 +462,11 @@ cVideo::cVideo(int, void *, void *, unsigned int unit)
 	else
 		devnum = unit;
 	fd = -1;
-	fdd = false;
 	openDevice();
-#if 0
-	setAVInput(ENCODER);
-#endif
 }
 
 cVideo::~cVideo(void)
 {
-#if 0
-	if (fd >= 0)
-		setAVInput(AUX);
-#endif
 	if (hdmi_cec::getInstance()->standby_cec_activ && fd >= 0)
 		hdmi_cec::getInstance()->SetCECState(true);
 
@@ -628,28 +557,11 @@ int cVideo::getAspectRatio(void)
 int cVideo::setCroppingMode(int /*vidDispMode_t format*/)
 {
 	return 0;
-#if 0
-	croppingMode = format;
-	const char *format_string[] = { "norm", "letterbox", "unknown", "mode_1_2", "mode_1_4", "mode_2x", "scale", "disexp" };
-	const char *f;
-	if (format >= VID_DISPMODE_NORM && format <= VID_DISPMODE_DISEXP)
-		f = format_string[format];
-	else
-		f = "ILLEGAL format!";
-	hal_debug("%s(%d) => %s\n", __FUNCTION__, format, f);
-	return fop(ioctl, MPEG_VID_SET_DISPMODE, format);
-#endif
 }
 
 int cVideo::Start(void * /*PcrChannel*/, unsigned short /*PcrPid*/, unsigned short /*VideoPid*/, void * /*hChannel*/)
 {
 	hal_debug("#%d: %s playstate=%d\n", devnum, __func__, playstate);
-#if 0
-	if (playstate == VIDEO_PLAYING)
-		return 0;
-	if (playstate == VIDEO_FREEZED)  /* in theory better, but not in practice :-) */
-		fop(ioctl, MPEG_VID_CONTINUE);
-#endif
 	/* implicitly do StopPicture() on video->Start() */
 	if (stillpicture)
 	{
@@ -826,16 +738,10 @@ void cVideo::Standby(unsigned int bOn)
 	if (bOn)
 	{
 		closeDevice();
-#if 0
-		setAVInput(AUX);
-#endif
 	}
 	else
 	{
 		openDevice();
-#if 0
-		setAVInput(ENCODER);
-#endif
 	}
 	video_standby = bOn;
 	hdmi_cec::getInstance()->SetCECState(video_standby);
@@ -846,45 +752,6 @@ int cVideo::getBlank(void)
 	int ret = proc_get_hex(VMPEG_xres[devnum]);
 	hal_debug("%s => %d\n", __func__, !ret);
 	return !ret;
-}
-
-void cVideo::QuadPiP(bool active, int _x, int _y, int _w, int _h)
-{
-	char buffer[64];
-	int _a = 1;
-	if (active) {
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-		proc_put("/proc/stb/video/decodermode", "mosaic", strlen("mosaic"));
-#endif
-		for (unsigned int i = 0; i < 4; i++) {
-			sprintf(buffer, "%x", _x);
-			proc_put(VMPEG_dst_left[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", _y);
-			proc_put(VMPEG_dst_top[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", _w);
-			proc_put(VMPEG_dst_width[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", _h);
-			proc_put(VMPEG_dst_height[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", _a);
-			proc_put(VMPEG_dst_apply[i], buffer, strlen(buffer));
-		}
-	} else {
-		for (unsigned int i = 0; i < 4; i++) {
-			sprintf(buffer, "%x", 0);
-			proc_put(VMPEG_dst_left[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", 0);
-			proc_put(VMPEG_dst_top[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", 0);
-			proc_put(VMPEG_dst_width[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", 0);
-			proc_put(VMPEG_dst_height[i], buffer, strlen(buffer));
-			sprintf(buffer, "%x", _a);
-			proc_put(VMPEG_dst_apply[i], buffer, strlen(buffer));
-		}
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-		proc_put("/proc/stb/video/decodermode", "normal", strlen("normal"));
-#endif
-	}
 }
 
 void cVideo::ShowPig(int _x)
@@ -1125,26 +992,6 @@ void cVideo::SetControl(int control, int value)
 	}
 }
 
-#if BOXMODEL_VUPLUS_ARM
-void cVideo::SetHDMIColorimetry(HDMI_COLORIMETRY hdmi_colorimetry)
-{
-	const char *p = NULL;
-	switch (hdmi_colorimetry)
-	{
-		case HDMI_COLORIMETRY_AUTO:
-			p = "Edit(Auto)";
-			break;
-		case HDMI_COLORIMETRY_BT709:
-			p = "Itu_R_BT_709";
-			break;
-		case HDMI_COLORIMETRY_BT470:
-			p = "Itu_R_BT_470_2_BG";
-			break;
-	}
-	if (p)
-		proc_put("/proc/stb/video/hdmi_colorspace", p, strlen(p));
-}
-#else
 void cVideo::SetHDMIColorimetry(HDMI_COLORIMETRY hdmi_colorimetry)
 {
 	const char *p = NULL;
@@ -1166,7 +1013,6 @@ void cVideo::SetHDMIColorimetry(HDMI_COLORIMETRY hdmi_colorimetry)
 	if (p)
 		proc_put("/proc/stb/video/hdmi_colorimetry", p, strlen(p));
 }
-#endif
 
 bool getvideo2(unsigned char *video, int xres, int yres)
 {

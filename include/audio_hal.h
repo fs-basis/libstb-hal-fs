@@ -4,8 +4,6 @@
 #include "../libduckbox/audio_mixer.h"
 #elif HAVE_ARM_HARDWARE
 #include "../libarmbox/audio_lib.h"
-#elif HAVE_MIPS_HARDWARE
-#include "../libmipsbox/audio_lib.h"
 #else
 #error no valid hardware defined
 #endif

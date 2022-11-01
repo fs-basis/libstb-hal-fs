@@ -75,25 +75,9 @@ static const char *DMX_T[] =
 
 /* this is the number of different cDemux() units, not the number of
  * /dev/dvb/.../demuxX devices! */
-#if BOXMODEL_VUULTIMO4K
-#define NUM_DEMUX 24
-#else
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-#define NUM_DEMUX 16
-#else
 #define NUM_DEMUX 4
-#endif
-#endif
 /* the current source of each cDemux unit */
-#if BOXMODEL_VUULTIMO4K
-static int dmx_source[NUM_DEMUX] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#else
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-static int dmx_source[NUM_DEMUX] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#else
 static int dmx_source[NUM_DEMUX] = { 0, 0, 0, 0 };
-#endif
-#endif
 
 char dmxdev[32];
 static char *devname(int adapter, int demux)
@@ -103,26 +87,10 @@ static char *devname(int adapter, int demux)
 }
 
 /* map the device numbers. */
-#if BOXMODEL_VUULTIMO4K
-#define NUM_DEMUXDEV 24
-#else
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-#define NUM_DEMUXDEV 16
-#else
 #define NUM_DEMUXDEV 8
-#endif
-#endif
 
 /* did we already DMX_SET_SOURCE on that demux device? */
-#if BOXMODEL_VUULTIMO4K
-static bool init[NUM_DEMUXDEV] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
-#else
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-static bool init[NUM_DEMUXDEV] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
-#else
 static bool init[NUM_DEMUXDEV] = { false, false, false, false, false, false, false, false };
-#endif
-#endif
 
 typedef struct dmx_pdata
 {
@@ -267,11 +235,6 @@ bool cDemux::Stop(void)
 
 int cDemux::Read(unsigned char *buff, int len, int timeout)
 {
-#if 0
-	if (len != 4095 && timeout != 10)
-		fprintf(stderr, "cDemux::%s #%d fd: %d type: %s len: %d timeout: %d\n",
-		    __FUNCTION__, num, fd, DMX_T[dmx_type], len, timeout);
-#endif
 	if (fd < 0)
 	{
 		hal_info("%s #%d: not open!\n", __func__, num);
@@ -320,14 +283,6 @@ retry:
 				goto retry;
 			return -1;
 		}
-#if 0
-		if (ufds.revents & POLLERR) /* POLLERR means buffer error, i.e. buffer overflow */
-		{
-			dmx_err("received %s,", "POLLERR", ufds.revents);
-			/* this seems to happen sometimes at recording start, without bad effects */
-			return 0;
-		}
-#endif
 		if (ufds.revents & POLLHUP) /* we get POLLHUP if e.g. a too big DMX_BUFFER_SIZE was set */
 		{
 			dmx_err("received %s,", "POLLHUP", ufds.revents);

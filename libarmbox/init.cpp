@@ -36,11 +36,6 @@ void hal_api_init()
 		proc_put("/proc/stb/fb/dst_width", buffer, strlen(buffer));
 		sprintf(buffer, "%x", 1);
 		proc_put("/proc/stb/fb/dst_apply", buffer, strlen(buffer));
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUDUO4KSE || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUUNO4K
-		sprintf(buffer, "%s", "enable");
-		proc_put("/proc/stb/frontend/fbc/fcc", buffer, strlen(buffer));
-		proc_put("/proc/stb/video/decodermode", "normal", strlen("normal"));
-#endif
 	}
 	initialized = true;
 	hal_info("%s end\n", __FUNCTION__);

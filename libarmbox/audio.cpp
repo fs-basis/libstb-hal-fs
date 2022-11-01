@@ -17,25 +17,7 @@
 #define hal_debug(args...) _hal_debug(HAL_DEBUG_AUDIO, this, args)
 #define hal_info(args...) _hal_info(HAL_DEBUG_AUDIO, this, args)
 
-#define fop(cmd, args...) ({                \
-    int _r;                     \
-    if (fd >= 0) {                  \
-        if ((_r = ::cmd(fd, args)) < 0)     \
-            hal_info(#cmd"(fd, "#args")\n");\
-        else                    \
-            hal_debug(#cmd"(fd, "#args")\n");\
-    }                       \
-    else { _r = fd; }               \
-    _r;                     \
-})
-
 #include <linux/soundcard.h>
-
-enum
-{
-	ENCODER,
-	AUX
-};
 
 cAudio *audioDecoder = NULL;
 cAudio *pipAudioDecoder[3] = { NULL, NULL, NULL };
@@ -59,7 +41,6 @@ cAudio::cAudio(void *, void *, void *, unsigned int unit)
 	else
 		devnum = unit;
 	fd = -1;
-	fdd = false;
 	clipfd = -1;
 	mixer_fd = -1;
 	openDevice();
@@ -103,53 +84,6 @@ void cAudio::closeDevice(void)
 	}
 }
 
-#ifndef AUDIO_SOURCE_HDMI
-#define AUDIO_SOURCE_HDMI 2
-#endif
-
-void cAudio::open_AVInput_Device(void)
-{
-	hal_debug("%s\n", __func__);
-
-	if (fdd) /* already open */
-		return;
-
-	fop(ioctl, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_HDMI);
-	fop(ioctl, AUDIO_PLAY);
-	fdd = true;
-}
-
-void cAudio::close_AVInput_Device(void)
-{
-	hal_debug("%s\n", __func__);
-
-	if (fdd)
-	{
-		fop(ioctl, AUDIO_STOP);
-	}
-	fdd = false;
-}
-
-void cAudio::setAVInput(int val)
-{
-	hal_info("%s - switching to: %s\n", __func__, val == AUX ? "AUX" : "ENCODER");
-
-	if (val == AUX)
-	{
-		Stop();
-		open_AVInput_Device();
-	}
-	else
-	{
-		if (fdd)
-		{
-			close_AVInput_Device();
-			fop(ioctl, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_DEMUX);
-			Start();
-		}
-	}
-}
-
 int cAudio::do_mute(bool enable, bool remember)
 {
 	hal_debug("%s(%d, %d)\n", __FUNCTION__, enable, remember);
@@ -183,11 +117,6 @@ int map_volume(const int volume)
 	// convert to -1dB steps
 	vol = 63 - vol * 63 / 100;
 	// now range is 63..0, where 0 is loudest
-
-#if BOXMODEL_VUPLUS_ALL
-	if (vol == 63)
-		vol = 255;
-#endif
 
 	return vol;
 }
@@ -423,9 +352,6 @@ int cAudio::StopClip()
 		hal_info("%s: clipfd not yet opened\n", __FUNCTION__);
 		return -1;
 	}
-#if BOXMODEL_VUPLUS_ARM
-	ioctl(clipfd, SNDCTL_DSP_RESET);
-#endif
 	close(clipfd);
 	clipfd = -1;
 	if (mixer_fd > -1)
@@ -445,45 +371,6 @@ void cAudio::getAudioInfo(int &type, int &layer, int &freq, int &bitrate, int &m
 	freq = 0;
 	bitrate = 0;
 	mode = 0;
-#if 0
-	unsigned int atype;
-	static const int freq_mpg[] = {44100, 48000, 32000, 0};
-	static const int freq_ac3[] = {48000, 44100, 32000, 0};
-	scratchl2 i;
-	if (ioctl(fd, MPEG_AUD_GET_DECTYP, &atype) < 0)
-		perror("cAudio::getAudioInfo MPEG_AUD_GET_DECTYP");
-	if (ioctl(fd, MPEG_AUD_GET_STATUS, &i) < 0)
-		perror("cAudio::getAudioInfo MPEG_AUD_GET_STATUS");
-
-	type = atype;
-#if 0
-	/* this does not work, some of the values are negative?? */
-	AMPEGStatus A;
-	memcpy(&A, &i.word00, sizeof(i.word00));
-	layer   = A.audio_mpeg_layer;
-	mode    = A.audio_mpeg_mode;
-	bitrate = A.audio_mpeg_bitrate;
-	switch (A.audio_mpeg_frequency)
-#endif
-		/* layer and bitrate are not used anyway... */
-		layer   = 0; //(i.word00 >> 17) & 3;
-	bitrate = 0; //(i.word00 >> 12) & 3;
-	switch (type)
-	{
-		case 0: /* MPEG */
-			mode = (i.word00 >> 6) & 3;
-			freq = freq_mpg[(i.word00 >> 10) & 3];
-			break;
-		case 1: /* AC3 */
-			mode = (i.word00 >> 28) & 7;
-			freq = freq_ac3[(i.word00 >> 16) & 3];
-			break;
-		default:
-			mode = 0;
-			freq = 0;
-	}
-	//fprintf(stderr, "type: %d layer: %d freq: %d bitrate: %d mode: %d\n", type, layer, freq, bitrate, mode);
-#endif
 };
 
 void cAudio::SetSRS(int /*iq_enable*/, int /*nmgr_enable*/, int /*iq_mode*/, int /*iq_level*/)

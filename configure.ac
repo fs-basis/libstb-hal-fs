@@ -51,7 +51,6 @@ fi
 AC_OUTPUT([
 Makefile
 common/Makefile
-libmipsbox/Makefile
 libarmbox/Makefile
 libduckbox/Makefile
 libdvbci/Makefile

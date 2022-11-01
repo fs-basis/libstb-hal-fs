@@ -75,14 +75,6 @@ bool cRecord::Open(void)
 	return true;
 }
 
-#if 0
-// unused
-void cRecord::Close(void)
-{
-	hal_info("%s: \n", __func__);
-}
-#endif
-
 bool cRecord::Start(int fd, unsigned short vpid, unsigned short *apids, int numpids, uint64_t)
 {
 	hal_info("%s: fd %d, vpid 0x%03x\n", __func__, fd, vpid);
@@ -383,20 +375,6 @@ void cRecord::RecordThread()
 		r = aio_write(&a);
 	}
 	free(buf);
-
-#if 0
-	// TODO: do we need to notify neutrino about failing recording?
-	CEventServer eventServer;
-	eventServer.registerEvent2(NeutrinoMessages::EVT_RECORDING_ENDED, CEventServer::INITID_NEUTRINO, "/tmp/neutrino.sock");
-	stream2file_status2_t s;
-	s.status = exit_flag;
-	strncpy(s.filename, basename(myfilename), 512);
-	s.filename[511] = '\0';
-	strncpy(s.dir, dirname(myfilename), 100);
-	s.dir[99] = '\0';
-	eventServer.sendEvent(NeutrinoMessages::EVT_RECORDING_ENDED, CEventServer::INITID_NEUTRINO, &s, sizeof(s));
-	printf("[stream2file]: pthreads exit code: %i, dir: '%s', filename: '%s' myfilename: '%s'\n", exit_flag, s.dir, s.filename, myfilename);
-#endif
 
 	if ((exit_flag != RECORD_STOPPED) && failureCallback)
 		failureCallback(failureData);

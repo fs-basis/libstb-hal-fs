@@ -67,12 +67,6 @@ extern "C"
     _r;                     \
 })
 
-enum
-{
-	ENCODER,
-	AUX
-};
-
 cVideo *videoDecoder = NULL;
 cVideo *pipVideoDecoder[3] = { NULL, NULL, NULL };
 
@@ -431,20 +425,6 @@ int image_to_mpeg2(const char *image_name, const char *encode_name)
 	return 0;
 }
 
-void cVideo::setAVInput(int val)
-{
-	hal_info("%s not implemented yet - switching to: %s\n", __func__, val == AUX ? "SCART" : "ENCODER");
-#if 0 // not working
-	int input_fd = open("/proc/stb/avs/0/input", O_WRONLY);
-	if (input_fd)
-	{
-		const char *input[] = {"encoder", "scart"};
-		write(input_fd, input[val], strlen(input[val]));
-		close(input_fd);
-	}
-#endif
-}
-
 cVideo::cVideo(int, void *, void *, unsigned int unit)
 {
 	hal_debug("%s unit %u\n", __func__, unit);
@@ -555,28 +535,11 @@ int cVideo::getAspectRatio(void)
 int cVideo::setCroppingMode(int /*vidDispMode_t format*/)
 {
 	return 0;
-#if 0
-	croppingMode = format;
-	const char *format_string[] = { "norm", "letterbox", "unknown", "mode_1_2", "mode_1_4", "mode_2x", "scale", "disexp" };
-	const char *f;
-	if (format >= VID_DISPMODE_NORM && format <= VID_DISPMODE_DISEXP)
-		f = format_string[format];
-	else
-		f = "ILLEGAL format!";
-	hal_debug("%s(%d) => %s\n", __FUNCTION__, format, f);
-	return fop(ioctl, MPEG_VID_SET_DISPMODE, format);
-#endif
 }
 
 int cVideo::Start(void * /*PcrChannel*/, unsigned short /*PcrPid*/, unsigned short /*VideoPid*/, void * /*hChannel*/)
 {
 	hal_debug("#%d: %s playstate=%d\n", devnum, __func__, playstate);
-#if 0
-	if (playstate == VIDEO_PLAYING)
-		return 0;
-	if (playstate == VIDEO_FREEZED)  /* in theory better, but not in practice :-) */
-		fop(ioctl, MPEG_VID_CONTINUE);
-#endif
 	/* implicitly do StopPicture() on video->Start() */
 	if (stillpicture)
 	{
@@ -872,19 +835,6 @@ int cVideo::getBlank(void)
    changed and triggers appropriate actions */
 void cVideo::VideoParamWatchdog(void)
 {
-#if 0
-	static unsigned int _v_info = (unsigned int) -1;
-	unsigned int v_info;
-	if (fd == -1)
-		return;
-	ioctl(fd, MPEG_VID_GET_V_INFO_RAW, &v_info);
-	if (_v_info != v_info)
-	{
-		hal_debug("%s params changed. old: %08x new: %08x\n", __FUNCTION__, _v_info, v_info);
-		setAspectRatio(-1, -1);
-	}
-	_v_info = v_info;
-#endif
 }
 
 void cVideo::ShowPig(int _x)
@@ -1515,10 +1465,6 @@ bool cVideo::GetScreenImage(unsigned char*&video, int &xres, int &yres, bool get
 		yblockoffset = xblock * 256/*16x16px*/ * 2/*2 block rows*/; //0xA000 for 1280
 
 		ioctl(fbfd, FBIO_WAITFORVSYNC, 0);
-#if 0
-		if (vdec)
-			ioctl(vdec->fd, VIDEO_FREEZE);
-#endif
 		//luma
 		layer_offset  = 0;
 		OUTITER       = 0;
@@ -1598,10 +1544,6 @@ bool cVideo::GetScreenImage(unsigned char*&video, int &xres, int &yres, bool get
 		}
 		munmap(decode_surface, vid_mem_size);
 		close(mfd);
-#if 0
-		if (vdec)
-			ioctl(vdec->fd, VIDEO_CONTINUE);
-#endif
 		/* yuv2rgb conversion (4:2:0)
 		   TODO: there has to be a way to use the blitter for this */
 		const int rgbstride = vid_x * 3;

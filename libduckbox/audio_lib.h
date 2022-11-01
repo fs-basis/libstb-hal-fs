@@ -54,17 +54,6 @@ class cAudio
 		cAudio(void *, void *, void *, unsigned int unit = 0);
 		~cAudio(void);
 
-		void open_AVInput_Device(void)
-		{
-			return;
-		};
-		void close_AVInput_Device(void)
-		{
-			return;
-		};
-
-		void setAVInput(int val);
-
 		void *GetHandle()
 		{
 			return NULL;

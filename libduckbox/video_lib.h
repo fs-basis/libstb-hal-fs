@@ -138,17 +138,6 @@ class cVideo
 		cVideo(int mode, void *, void *, unsigned int unit = 0);
 		~cVideo(void);
 
-		void open_AVInput_Device(void)
-		{
-			return;
-		}; // Dummy
-		void close_AVInput_Device(void)
-		{
-			return;
-		};    // Dummy
-
-		void setAVInput(int val);
-
 		void *GetTVEnc()
 		{
 			return NULL;
