@@ -144,6 +144,14 @@ static const char *VMPEG_dst_left[] =
 	"/proc/stb/vmpeg/3/dst_left"
 };
 
+static const char *VMPEG_dst_apply[] =
+{
+	"/proc/stb/vmpeg/0/dst_apply",
+	"/proc/stb/vmpeg/1/dst_apply",
+	"/proc/stb/vmpeg/2/dst_apply",
+	"/proc/stb/vmpeg/3/dst_apply"
+};
+
 static const char *VMPEG_framerate[] =
 {
 	"/proc/stb/vmpeg/0/framerate",
@@ -799,6 +807,9 @@ void cVideo::Pig(int x, int y, int w, int h, int osd_w, int osd_h, int startx, i
 
 	sprintf(buffer, "%x", _h);
 	proc_put(VMPEG_dst_height[devnum], buffer, strlen(buffer));
+
+	sprintf(buffer, "%x", 1);
+	proc_put(VMPEG_dst_apply[devnum], buffer, strlen(buffer));
 }
 
 static inline int rate2csapi(int rate)

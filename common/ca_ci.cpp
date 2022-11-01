@@ -1019,7 +1019,7 @@ void cCA::setSource(eDVBCISlot *slot)
 	}
 }
 
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_ARM_HARDWARE
 static std::string getTunerLetter(int number)
 {
 	return std::string(1, char(65 + number));

@@ -124,7 +124,6 @@ int descrambler_set_key(int index, int parity, unsigned char *data)
 		d.data_type = CA_DATA_KEY;
 		d.length = 32;
 		d.data = data;
-
 		if (ioctl(desc_fd, CA_SET_DESCR_DATA, &d))
 		{
 			printf("CA_SET_DESCR_DATA index=%d parity=%d (errno=%d %s)\n", index, parity, errno, strerror(errno));
