@@ -104,7 +104,7 @@ typedef struct CA_MESSAGE
 
 typedef void (*hal_messenger)(unsigned int msg, unsigned int data);
 
-#if HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE
 void hal_register_messenger(hal_messenger messenger);
 #else
 static inline void hal_register_messenger(hal_messenger)

@@ -76,7 +76,6 @@ static const char *DMX_T[] =
 /* this is the number of different cDemux() units, not the number of
  * /dev/dvb/.../demuxX devices! */
 #define NUM_DEMUX 4
-
 /* the current source of each cDemux unit */
 static int dmx_source[NUM_DEMUX] = { 0, 0, 0, 0 };
 
