@@ -100,7 +100,9 @@ class cAudio
 		void SetHdmiDD(bool enable);
 		void SetSpdifDD(bool enable);
 		void ScheduleMute(bool On);
+#if !BOXMODEL_BRE2ZE4K
 		void EnableAnalogOut(bool enable);
+#endif
 };
 
 #endif // __AUDIO_LIB_H__
