@@ -146,6 +146,7 @@ static const char *vid_modes[] =
 	"1080p25",  // VIDEO_STD_1080P25
 	"1080p30",  // VIDEO_STD_1080P30
 	"1080p50",  // VIDEO_STD_1080P50
+	"1080p60",  // VIDEO_STD_1080P60
 	"720p50",   // VIDEO_STD_AUTO
 	NULL
 };
