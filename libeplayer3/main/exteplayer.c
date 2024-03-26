@@ -195,7 +195,7 @@ static int kbhit(void)
 	FD_SET(0, &readfds);
 	FD_SET(g_pfd[0], &readfds);
 
-	if (-1 == select(g_pfd[0] + 1, &readfds, NULL, NULL, &tv))
+	if (select(g_pfd[0] + 1, &readfds, NULL, NULL, &tv) == -1)
 	{
 		return 0;
 	}
@@ -225,7 +225,7 @@ static void SetBuffering()
 static void SetNice(int prio)
 {
 	//int prevPrio = getpriority(PRIO_PROCESS, 0);
-	if (-1 == setpriority(PRIO_PROCESS, 0, prio))
+	if (setpriority(PRIO_PROCESS, 0, prio) == -1)
 	{
 		printf("setpriority - failed\n");
 	}
@@ -359,7 +359,7 @@ static int HandleTracks(const Manager_t *ptrManager, const PlaybackCmd_t playbac
 					ok = sscanf(argvBuff + 1, "%d", &id);
 				}
 
-				if (id >= 0 || (1 == ok && id == -1))
+				if (id >= 0 || (ok == 1 && id == -1))
 				{
 					commandRetVal = g_player->playback->Command(g_player, playbackSwitchCmd, (void *)&id);
 					fprintf(stderr, "{\"%c_%c\":{\"id\":%d,\"sts\":%d}}\n", argvBuff[0], 's', id, commandRetVal);
@@ -774,7 +774,7 @@ int main(int argc, char *argv[])
 				case 'o':
 				{
 					int flags = 0;
-					if (1 == sscanf(argvBuff + 1, "%d", &flags))
+					if (sscanf(argvBuff + 1, "%d", &flags) == 1)
 					{
 						progressive_playback_set(flags);
 						fprintf(stderr, "{\"PROGRESSIVE_DOWNLOAD\":{\"flags\":%d, \"sts\":0}}\n", flags);
@@ -955,7 +955,7 @@ int main(int argc, char *argv[])
 		free(g_player);
 	}
 
-	if (isTermThreadStarted && 1 == write(g_pfd[1], "x", 1))
+	if (isTermThreadStarted && write(g_pfd[1], "x", 1) == 1)
 	{
 		pthread_join(termThread, NULL);
 	}
