@@ -316,6 +316,11 @@ class cCA
 		/// Sets the frequency (in Hz) of the TS stream input (only valid for CI)
 		/// sh4 unused
 		void SetTSClock(u32 Speed, int slot = 0);
+
+		/// ci operator mode
+		int op[4];
+		void SetCIOperator(int ciop, int slot = 0);
+
 		/// Start the CA module
 		/// sh4 unused
 		bool Start(void);
