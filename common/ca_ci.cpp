@@ -1794,3 +1794,8 @@ void cCA::SetTSClock(u32 Speed, int slot)
 		fclose(ci);
 	}
 }
+
+void cCA::SetCIOperator(int ciop, int slot)
+{
+	op[slot] = ciop;
+}
